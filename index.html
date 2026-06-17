@@ -172,15 +172,9 @@
             text-align: center; min-width: 70px; color: #fff;
             position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
         }
-        .answer-btn.mixture-btn {
-            background: #444;
-        }
-        .mixture-stripe {
-            position: absolute; top: 0; bottom: 0;
-        }
-        .mixture-label {
-            position: relative; z-index: 2; font-weight: 700;
-        }
+        .answer-btn.mixture-btn { background: #444; }
+        .mixture-stripe { position: absolute; top: 0; bottom: 0; }
+        .mixture-label { position: relative; z-index: 2; font-weight: 700; }
         .answer-btn:active { transform: scale(0.96); }
         .answer-btn.correct-flash { animation: correctPulse 0.5s; border-color: #22c55e !important; }
         .answer-btn.wrong-flash { animation: wrongPulse 0.5s; border-color: #ef4444 !important; }
@@ -262,6 +256,16 @@
 
 <div class="modal-overlay hidden" id="scenario-modal"><div class="modal"><h3>⚙️ Сценарий раздачи</h3><label>Позиция героя</label><select id="scenario-position"><option value="UTG">UTG</option><option value="UTG+1">UTG+1</option><option value="MP">MP</option><option value="MP+1">MP+1</option><option value="CO">CO</option><option value="BTN">BTN</option><option value="SB">SB</option><option value="BB">BB</option><option value="BB+1">BB+1</option></select><label>Количество игроков</label><input type="number" id="scenario-players" min="2" max="9" value="6"><label>Эффективный стек (bb)</label><input type="number" id="scenario-stack" min="10" max="500" value="100"><label>Действие перед нами</label><select id="scenario-action"><option value="none">Нет</option><option value="limp">Лимп</option><option value="raise">Рейз</option><option value="3bet">3-бет</option><option value="allin">Алл-ин</option></select><div id="scenario-raise-size-container"><label>Размер рейза (bb)</label><input type="number" id="scenario-raise-size" min="1" max="200" value="2.5" step="0.1"></div><div class="btn-row"><button class="btn btn-ghost btn-sm" id="btn-scenario-cancel">Отмена</button><button class="btn btn-accent btn-sm" id="btn-scenario-save">Сохранить</button></div></div></div>
 
+<div class="modal-overlay hidden" id="confirm-modal">
+    <div class="modal" style="max-width: 320px;">
+        <h3 id="confirm-message">Вы уверены?</h3>
+        <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" id="confirm-no">Отмена</button>
+            <button class="btn btn-danger btn-sm" id="confirm-yes">Да</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function() {
     const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
@@ -285,6 +289,19 @@
     };
     let cellElements = new Map();
     let scenarioEditingRangeId = null;
+
+    function customConfirm(message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirm-modal');
+            const msg = document.getElementById('confirm-message');
+            const yesBtn = document.getElementById('confirm-yes');
+            const noBtn = document.getElementById('confirm-no');
+            msg.textContent = message;
+            modal.classList.remove('hidden');
+            yesBtn.onclick = () => { modal.classList.add('hidden'); resolve(true); };
+            noBtn.onclick = () => { modal.classList.add('hidden'); resolve(false); };
+        });
+    }
 
     function genId() { return 'id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); }
     function getHandName(r,c) { if(r===c) return RANKS[r]+RANKS[c]; if(r<c) return RANKS[r]+RANKS[c]+'s'; return RANKS[c]+RANKS[r]+'o'; }
@@ -333,11 +350,11 @@
 
     function renderTree() { const c=document.getElementById('tree-container'); if(c) { c.innerHTML=''; renderTreeItems(state.tree,c,0,true); } }
     function renderMemoryTree() { const c=document.getElementById('memory-tree-container'); if(!c) return; c.innerHTML=''; renderTreeItems(state.tree,c,0,false); }
-    function renderTreeItems(items, container, depth, isEditor) { for(const item of items) { const div=document.createElement('div'); div.className='tree-item'; if(isEditor) { div.draggable=true; div.dataset.treeId=item.id; } div.style.paddingLeft=(depth*14+6)+'px'; if(state.activeTreeElementId===item.id&&isEditor) div.classList.add('active-tree'); if(item.type==='range'&&state.activeRangeId===item.id&&(!isEditor||state.activeTreeElementId!==item.id)) div.classList.add('active-tree'); const icon=document.createElement('span'); icon.className='tree-icon'; icon.textContent=item.type==='folder'?(item.expanded?'📂':'📁'):'📄'; div.appendChild(icon); if(item.type==='folder'&&isEditor) { const cb=document.createElement('input'); cb.type='checkbox'; cb.className='tree-checkbox'; const st=getFolderCheckboxState(item); cb.checked=st.checked; cb.indeterminate=st.indeterminate; cb.addEventListener('click',e=>{e.stopPropagation(); setTrainEnabledForFolder(item,cb.checked); saveData(); renderTree();}); div.appendChild(cb); } const nameSpan=document.createElement('span'); nameSpan.className='tree-name'; nameSpan.textContent=item.name; div.appendChild(nameSpan); if(item.type==='range') { if(isEditor) { const cb=document.createElement('input'); cb.type='checkbox'; cb.className='tree-checkbox'; cb.checked=item.trainEnabled!==false; cb.addEventListener('click',e=>{e.stopPropagation(); item.trainEnabled=!item.trainEnabled; saveData(); renderTree();}); div.appendChild(cb); const sb=document.createElement('span'); sb.className='scenario-btn'; sb.textContent='⚙️'; sb.addEventListener('click',e=>{e.stopPropagation(); openScenarioModal(item);}); div.appendChild(sb); } } if(isEditor) { const actions=document.createElement('span'); actions.className='tree-actions'; const copyBtn=document.createElement('button'); copyBtn.textContent='📋'; copyBtn.addEventListener('click',e=>{e.stopPropagation(); if(item.type==='range') copyRange(item.id);}); actions.appendChild(copyBtn); const delBtn=document.createElement('button'); delBtn.textContent='×'; delBtn.style.fontSize='15px'; delBtn.style.fontWeight='700'; delBtn.addEventListener('click',e=>{e.stopPropagation(); deleteTreeItem(item.id);}); actions.appendChild(delBtn); div.appendChild(actions); } div.addEventListener('click',e=>{ if(e.target.tagName==='INPUT'||e.target.closest('button')||e.target.closest('.scenario-btn')) return; if(isEditor) state.activeTreeElementId=item.id; if(item.type==='range') { state.activeRangeId=item.id; if(state.mode==='memory') { document.getElementById('memory-current-range').textContent=item.name; updateMemoryBrushButtons(item); state.memoryState.userChart={}; state.memoryState.checked=false; setAllCellsNeutral(); document.getElementById('memory-result').textContent=''; } if(isEditor) updateCellsForRange(item.id); } if(item.type==='folder') { item.expanded=!item.expanded; saveData(); } if(isEditor) renderTree(); else renderMemoryTree(); }); if(isEditor) { div.addEventListener('dblclick',e=>{ if(e.target.tagName==='INPUT'||e.target.closest('button')||e.target.closest('.scenario-btn')) return; startRename(item); }); div.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',JSON.stringify({id:item.id}));}); div.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; const rect=div.getBoundingClientRect(); const y=e.clientY-rect.top; const h=rect.height; let pos; if(y<h*0.25) pos='before'; else if(y>h*0.75) pos='after'; else pos='inside'; div.dataset.dropPosition=pos; document.querySelectorAll('.tree-item.drop-before, .tree-item.drop-after, .tree-item.drop-inside').forEach(el=>el.classList.remove('drop-before','drop-after','drop-inside')); div.classList.add('drop-'+pos); }); div.addEventListener('dragleave',()=>{ div.classList.remove('drop-before','drop-after','drop-inside'); delete div.dataset.dropPosition; }); div.addEventListener('drop',e=>{ e.preventDefault(); div.classList.remove('drop-before','drop-after','drop-inside'); const data=JSON.parse(e.dataTransfer.getData('text/plain')); const pos=div.dataset.dropPosition||'after'; if(data.id&&data.id!==item.id) { handleTreeDrop(data.id,item.id,pos); } delete div.dataset.dropPosition; }); } container.appendChild(div); if(item.type==='folder'&&item.expanded&&item.children) renderTreeItems(item.children,container,depth+1,isEditor); } }
+    function renderTreeItems(items, container, depth, isEditor) { for(const item of items) { const div=document.createElement('div'); div.className='tree-item'; if(isEditor) { div.draggable=true; div.dataset.treeId=item.id; } div.style.paddingLeft=(depth*14+6)+'px'; if(state.activeTreeElementId===item.id&&isEditor) div.classList.add('active-tree'); if(item.type==='range'&&state.activeRangeId===item.id&&(!isEditor||state.activeTreeElementId!==item.id)) div.classList.add('active-tree'); const icon=document.createElement('span'); icon.className='tree-icon'; icon.textContent=item.type==='folder'?(item.expanded?'📂':'📁'):'📄'; div.appendChild(icon); if(item.type==='folder'&&isEditor) { const cb=document.createElement('input'); cb.type='checkbox'; cb.className='tree-checkbox'; const st=getFolderCheckboxState(item); cb.checked=st.checked; cb.indeterminate=st.indeterminate; cb.addEventListener('click',e=>{e.stopPropagation(); setTrainEnabledForFolder(item,cb.checked); saveData(); renderTree();}); div.appendChild(cb); } const nameSpan=document.createElement('span'); nameSpan.className='tree-name'; nameSpan.textContent=item.name; div.appendChild(nameSpan); if(item.type==='range') { if(isEditor) { const cb=document.createElement('input'); cb.type='checkbox'; cb.className='tree-checkbox'; cb.checked=item.trainEnabled!==false; cb.addEventListener('click',e=>{e.stopPropagation(); item.trainEnabled=!item.trainEnabled; saveData(); renderTree();}); div.appendChild(cb); const sb=document.createElement('span'); sb.className='scenario-btn'; sb.textContent='⚙️'; sb.addEventListener('click',e=>{e.stopPropagation(); openScenarioModal(item);}); div.appendChild(sb); } } if(isEditor) { const actions=document.createElement('span'); actions.className='tree-actions'; const copyBtn=document.createElement('button'); copyBtn.textContent='📋'; copyBtn.addEventListener('click',e=>{e.stopPropagation(); if(item.type==='range') copyRange(item.id);}); actions.appendChild(copyBtn); const delBtn=document.createElement('button'); delBtn.textContent='×'; delBtn.style.fontSize='15px'; delBtn.style.fontWeight='700'; delBtn.addEventListener('click',async e=>{e.stopPropagation(); await deleteTreeItem(item.id);}); actions.appendChild(delBtn); div.appendChild(actions); } div.addEventListener('click',e=>{ if(e.target.tagName==='INPUT'||e.target.closest('button')||e.target.closest('.scenario-btn')) return; if(isEditor) state.activeTreeElementId=item.id; if(item.type==='range') { state.activeRangeId=item.id; if(state.mode==='memory') { document.getElementById('memory-current-range').textContent=item.name; updateMemoryBrushButtons(item); state.memoryState.userChart={}; state.memoryState.checked=false; setAllCellsNeutral(); document.getElementById('memory-result').textContent=''; } if(isEditor) updateCellsForRange(item.id); } if(item.type==='folder') { item.expanded=!item.expanded; saveData(); } if(isEditor) renderTree(); else renderMemoryTree(); }); if(isEditor) { div.addEventListener('dblclick',e=>{ if(e.target.tagName==='INPUT'||e.target.closest('button')||e.target.closest('.scenario-btn')) return; startRename(item); }); div.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',JSON.stringify({id:item.id}));}); div.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; const rect=div.getBoundingClientRect(); const y=e.clientY-rect.top; const h=rect.height; let pos; if(y<h*0.25) pos='before'; else if(y>h*0.75) pos='after'; else pos='inside'; div.dataset.dropPosition=pos; document.querySelectorAll('.tree-item.drop-before, .tree-item.drop-after, .tree-item.drop-inside').forEach(el=>el.classList.remove('drop-before','drop-after','drop-inside')); div.classList.add('drop-'+pos); }); div.addEventListener('dragleave',()=>{ div.classList.remove('drop-before','drop-after','drop-inside'); delete div.dataset.dropPosition; }); div.addEventListener('drop',e=>{ e.preventDefault(); div.classList.remove('drop-before','drop-after','drop-inside'); const data=JSON.parse(e.dataTransfer.getData('text/plain')); const pos=div.dataset.dropPosition||'after'; if(data.id&&data.id!==item.id) { handleTreeDrop(data.id,item.id,pos); } delete div.dataset.dropPosition; }); } container.appendChild(div); if(item.type==='folder'&&item.expanded&&item.children) renderTreeItems(item.children,container,depth+1,isEditor); } }
     function handleTreeDrop(dragId, targetId, position) { const dragItem=findItemInTreeById(state.tree,dragId); if(!dragItem) return; const targetItem=findItemInTreeById(state.tree,targetId); if(!targetItem||dragId===targetId) return; if(position==='inside'&&targetItem.type==='folder'&&findItemInTreeById([targetItem],dragId)) return; removeItemFromTree(state.tree,dragId); const parentInfo=findParentInTree(state.tree,targetId); const parentArray=parentInfo?parentInfo.array:state.tree; const targetIndex=parentArray.indexOf(targetItem); if(position==='inside'&&targetItem.type==='folder') { if(!targetItem.children) targetItem.children=[]; targetItem.children.push(dragItem); targetItem.expanded=true; } else if(position==='before') { parentArray.splice(targetIndex,0,dragItem); } else { parentArray.splice(targetIndex+1,0,dragItem); } saveData(); renderTree(); }
     function startRename(item) { const el=document.querySelector(`[data-tree-id="${item.id}"]`); if(!el) return; const nameSpan=el.querySelector('.tree-name'); if(!nameSpan) return; const input=document.createElement('input'); input.value=item.name; nameSpan.innerHTML=''; nameSpan.appendChild(input); input.focus(); input.select(); const finish=(save)=>{ const newName=save?input.value.trim():item.name; if(save&&newName&&newName!==item.name) { item.name=newName; saveData(); } renderTree(); }; input.addEventListener('blur',()=>finish(true)); input.addEventListener('keydown',e=>{if(e.key==='Enter') finish(true); if(e.key==='Escape') finish(false);}); }
     function copyRange(id) { const range=findItemInTreeById(state.tree,id); if(!range||range.type!=='range') return; const copy=deepClone(range); copy.id=genId(); copy.name+=' (копия)'; insertAfterInTree(state.tree,id,copy); saveData(); renderTree(); }
-    function deleteTreeItem(id) { if(!confirm('Удалить этот элемент?')) return; removeItemFromTree(state.tree,id); if(state.activeRangeId===id) state.activeRangeId=null; if(state.activeTreeElementId===id) state.activeTreeElementId=null; saveData(); renderTree(); updateCellsForRange(state.activeRangeId); }
+    async function deleteTreeItem(id) { const ok = await customConfirm('Удалить этот элемент?'); if(!ok) return; removeItemFromTree(state.tree,id); if(state.activeRangeId===id) state.activeRangeId=null; if(state.activeTreeElementId===id) state.activeTreeElementId=null; saveData(); renderTree(); updateCellsForRange(state.activeRangeId); }
     function addFolder() { const f={id:genId(),type:'folder',name:'Новая папка',expanded:true,children:[]}; state.tree.push(f); state.activeTreeElementId=f.id; saveData(); renderTree(); }
     function addRange() { const r={id:genId(),type:'range',name:'Новый диапазон',trainEnabled:true,chart:{},train:{},scenario:{position:'BTN',players:6,effectiveStack:100,actionBefore:'none',raiseSize:2.5}}; state.tree.push(r); state.activeTreeElementId=r.id; state.activeRangeId=r.id; saveData(); renderTree(); updateCellsForRange(r.id); }
 
@@ -460,67 +477,7 @@
     function getDefaultScenario() { return {position:'BTN',players:6,effectiveStack:100,actionBefore:'none',raiseSize:2.5}; }
     function startTraining() { if(state.mode!=='train') return; state.trainState.answered=false; state.trainState.feedback=''; document.getElementById('train-feedback').textContent=''; document.getElementById('train-feedback').className=''; clearAllCellHighlights(); document.querySelectorAll('#train-answers .answer-btn').forEach(b=>{b.classList.remove('correct-flash','wrong-flash');b.style.pointerEvents='auto';b.style.opacity='1';}); const hands=getAllTrainHandsWithRange(); if(hands.length===0) { document.getElementById('train-source-name').textContent='—'; document.getElementById('train-stack').textContent=''; document.getElementById('poker-table').innerHTML='<div id="train-hand-display"></div>'; document.getElementById('train-feedback').textContent='Нет отмеченных рук в включённых диапазонах'; updateCellsForRange(null); return; } const entry=hands[Math.floor(Math.random()*hands.length)]; state.trainState.currentHand=entry.hand; state.trainState.currentRangeId=entry.rangeId; const range=findItemInTreeById(state.tree,entry.rangeId); document.getElementById('train-source-name').textContent=range?range.name:'—'; document.getElementById('train-stack').textContent=`Стек: ${entry.scenario.effectiveStack||100}bb`; updatePokerTable(entry.scenario); document.getElementById('train-hand-display').textContent=entry.hand; if(state.trainState.showGrid) { updateCellsForRange(entry.rangeId); document.getElementById('grid-wrapper').classList.remove('invisible'); } else document.getElementById('grid-wrapper').classList.add('invisible'); highlightCellInTrain(entry.hand); renderTrainAnswerButtons(entry.rangeId); }
 
-    function updateMemoryBrushButtons(range) {
-        const container = document.getElementById('memory-brush-buttons');
-        container.innerHTML = '';
-        const brushIds = range ? getBrushIdsFromRange(range) : new Set([BUILTIN_FOLD_ID]);
-        if (!brushIds.has(BUILTIN_FOLD_ID)) brushIds.add(BUILTIN_FOLD_ID);
-        for (const brushId of brushIds) {
-            const brush = getBrushById(brushId) || getBrushById(BUILTIN_FOLD_ID);
-            const btn = document.createElement('button');
-            btn.className = 'answer-btn';
-            btn.dataset.brushId = brushId;
-            btn.dataset.brushType = brush.type;
-            btn.style.backgroundColor = brush.color;
-            btn.style.borderColor = brush.color;
-            btn.textContent = brush.name;
-            if (state.memoryState.selectedMemBrushId === brushId) {
-                btn.style.outline = '2px solid #fff';
-                btn.style.outlineOffset = '2px';
-            }
-            btn.addEventListener('click', () => {
-                state.memoryState.selectedMemBrushId = brushId;
-                updateMemoryBrushButtons(range);
-            });
-            container.appendChild(btn);
-        }
-        const mixedPatterns = range ? getMixedPatternsFromRange(range) : [];
-        mixedPatterns.forEach((pattern, idx) => {
-            const mixtureBtn = document.createElement('button');
-            mixtureBtn.className = 'answer-btn mixture-btn';
-            mixtureBtn.dataset.brushId = `mixture_${idx}`;
-            mixtureBtn.dataset.patternKey = pattern.key;
-            mixtureBtn.style.borderColor = '#aaa';
-            let cumulative = 0;
-            for (const entry of pattern.entries) {
-                const brush = getBrushById(entry.brushId);
-                const color = brush ? brush.color : DEFAULT_FOLD_COLOR;
-                const stripe = document.createElement('div');
-                stripe.className = 'mixture-stripe';
-                stripe.style.left = cumulative + '%';
-                stripe.style.width = entry.pct + '%';
-                stripe.style.backgroundColor = color;
-                mixtureBtn.appendChild(stripe);
-                cumulative += entry.pct;
-            }
-            const label = document.createElement('span');
-            label.className = 'mixture-label';
-            label.textContent = pattern.entries.map(e => {
-                const b = getBrushById(e.brushId);
-                return (b ? b.name : '') + ' ' + e.pct + '%';
-            }).join(' / ');
-            mixtureBtn.appendChild(label);
-            if (state.memoryState.selectedMemBrushId === `mixture_${idx}`) {
-                mixtureBtn.style.outline = '2px solid #fff';
-                mixtureBtn.style.outlineOffset = '2px';
-            }
-            mixtureBtn.addEventListener('click', () => {
-                state.memoryState.selectedMemBrushId = `mixture_${idx}`;
-                updateMemoryBrushButtons(range);
-            });
-            container.appendChild(mixtureBtn);
-        });
-    }
+    function updateMemoryBrushButtons(range) { const c=document.getElementById('memory-brush-buttons'); c.innerHTML=''; const ids=range?getBrushIdsFromRange(range):new Set([BUILTIN_FOLD_ID]); if(!ids.has(BUILTIN_FOLD_ID)) ids.add(BUILTIN_FOLD_ID); if(!ids.has(state.memoryState.selectedMemBrushId)) state.memoryState.selectedMemBrushId=ids.values().next().value; for(const id of ids) { const brush=getBrushById(id); if(!brush) continue; const btn=document.createElement('button'); btn.className='answer-btn'; btn.dataset.brushId=brush.id; btn.dataset.brushType=brush.type; btn.style.backgroundColor=brush.color; btn.style.color='#fff'; btn.style.borderColor=brush.color; btn.textContent=brush.name; if(state.memoryState.selectedMemBrushId===brush.id) { btn.style.outline='2px solid #fff'; btn.style.outlineOffset='2px'; } btn.addEventListener('click',()=>{ state.memoryState.selectedMemBrushId=brush.id; updateMemoryBrushButtons(range); }); c.appendChild(btn); } }
     function checkMemory() { const activeRange=getActiveRange(); if(!activeRange||activeRange.type!=='range') { document.getElementById('memory-result').textContent='Нет активного диапазона'; return; } state.memoryState.checked=true; let correct=0,wrong=0; const allHands=getAllHands(); for(const hand of allHands) { const userBrushId=state.memoryState.userChart[hand]||BUILTIN_FOLD_ID; const correctId=getDominantBrushId(activeRange.chart,hand); const userBrush=getBrushById(userBrushId)||getBrushById(BUILTIN_FOLD_ID); const correctBrush=getBrushById(correctId)||getBrushById(BUILTIN_FOLD_ID); const isCorrect=userBrush.type===correctBrush.type; if(isCorrect) correct++; else wrong++; const cell=cellElements.get(hand); if(cell) { cell.classList.remove('memory-correct','memory-wrong'); cell.classList.add(isCorrect?'memory-correct':'memory-wrong'); cell.querySelectorAll('.badge').forEach(b=>b.remove()); if(!isCorrect) { const b=document.createElement('div'); b.className='badge error'; b.textContent='!'; cell.appendChild(b); } const label=cell.querySelector('.cell-label'); if(label) cell.appendChild(label); } state.statistics.memory.push({hand,answer:userBrush.type,correct:isCorrect,correctType:correctBrush.type,timestamp:Date.now(),rangeId:activeRange.id}); } state.memoryCounts.correct+=correct; state.memoryCounts.wrong+=wrong; document.getElementById('memory-correct-count').textContent=state.memoryCounts.correct; document.getElementById('memory-wrong-count').textContent=state.memoryCounts.wrong; document.getElementById('memory-result').textContent=`Верно: ${correct} / ${allHands.length} (${Math.round(correct/allHands.length*100)}%)`; saveData(); }
 
     function computeItemAccuracy(itemId, mode) { const stats=mode==='train'?state.statistics.train:state.statistics.memory; let filtered=stats; if(itemId==='__all__') { filtered=stats; } else { const item=findItemInTreeById(state.tree,itemId); if(!item) return null; if(item.type==='range') { filtered=stats.filter(s=>s.rangeId===itemId); } else if(item.type==='folder') { const rangeIds=getAllDescendantRangeIds(item); const idSet=new Set(rangeIds); filtered=stats.filter(s=>idSet.has(s.rangeId)); } } const total=filtered.length; const correct=filtered.filter(s=>s.correct).length; const percent=total>0?Math.round((correct/total)*100):0; return {correct,total,percent}; }
@@ -528,7 +485,7 @@
     function renderReportTreeItems(items, container, depth, mode) { for(const item of items) { const div=document.createElement('div'); div.className='tree-item'; div.style.paddingLeft=(depth*14+6)+'px'; div.dataset.treeId=item.id; if(state.reportSelectedId===item.id) div.classList.add('active-tree'); const icon=document.createElement('span'); icon.className='tree-icon'; const isExpanded=state.reportExpandedFolders.has(item.id); icon.textContent=item.type==='folder'?(isExpanded?'📂':'📁'):'📄'; div.appendChild(icon); const nameSpan=document.createElement('span'); nameSpan.className='tree-name'; nameSpan.textContent=item.name; div.appendChild(nameSpan); const acc=computeItemAccuracy(item.id,mode); const accSpan=document.createElement('span'); accSpan.className='tree-accuracy'; accSpan.textContent=acc?`${acc.percent}%`:'-'; div.appendChild(accSpan); div.addEventListener('click',(e)=>{ e.stopPropagation(); if(item.type==='folder') { if(state.reportExpandedFolders.has(item.id)) { state.reportExpandedFolders.delete(item.id); } else { state.reportExpandedFolders.add(item.id); } } state.reportSelectedId=item.id; renderReportTree(); renderReport(); }); container.appendChild(div); if(item.type==='folder'&&isExpanded&&item.children) { renderReportTreeItems(item.children,container,depth+1,mode); } } }
 
     function renderReport() { const modeSelect=document.getElementById('report-mode-select').value; const selectedId=state.reportSelectedId; const stats=modeSelect==='train'?state.statistics.train:state.statistics.memory; let filtered=stats; if(selectedId!=='__all__') { const item=findItemInTreeById(state.tree,selectedId); if(item) { if(item.type==='range') filtered=stats.filter(s=>s.rangeId===selectedId); else if(item.type==='folder') { const rangeIds=getAllDescendantRangeIds(item); const idSet=new Set(rangeIds); filtered=stats.filter(s=>idSet.has(s.rangeId)); } } } const totalAnswers=filtered.length; const totalCorrect=filtered.filter(s=>s.correct).length; const overallPercent=totalAnswers>0?Math.round((totalCorrect/totalAnswers)*100):0; document.getElementById('report-overall-accuracy').textContent=`Точность: ${totalCorrect} / ${totalAnswers} (${overallPercent}%)`; const rangeAcc=document.getElementById('report-range-accuracy'); rangeAcc.innerHTML=''; if(selectedId==='__all__') { const rangeStats={}; for(const e of stats) { if(!rangeStats[e.rangeId]) rangeStats[e.rangeId]={correct:0,total:0}; rangeStats[e.rangeId].total++; if(e.correct) rangeStats[e.rangeId].correct++; } for(const [rid,data] of Object.entries(rangeStats)) { const path=getRangePath(rid); const range=findItemInTreeById(state.tree,rid); const displayName=path||(range?range.name:rid); const pct=data.total>0?Math.round((data.correct/data.total)*100):0; const div=document.createElement('div'); div.className='range-accuracy-item'; div.innerHTML=`<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${displayName}</span><span>${data.correct}/${data.total} (${pct}%)</span>`; rangeAcc.appendChild(div); } } else if(selectedId&&filtered.length>0) { const item=findItemInTreeById(state.tree,selectedId); const path=item&&item.type==='range'?getRangePath(selectedId):''; const displayName=path||(item?item.name:selectedId); const div=document.createElement('div'); div.className='range-accuracy-item'; div.innerHTML=`<span>${displayName}</span><span>${totalCorrect}/${totalAnswers} (${overallPercent}%)</span>`; rangeAcc.appendChild(div); } const agg={}; for(const e of filtered) { if(!agg[e.hand]) agg[e.hand]={errors:0,total:0}; agg[e.hand].total++; if(!e.correct) agg[e.hand].errors++; } const sorted=Object.entries(agg).sort((a,b)=>{ const ra=a[1].total>0?a[1].errors/a[1].total:0; const rb=b[1].total>0?b[1].errors/b[1].total:0; return rb-ra; }); const tc=document.getElementById('report-table-container'); if(sorted.length===0) tc.innerHTML='<p style="color:var(--text-secondary);font-size:12px;">Нет данных</p>'; else { let html='<table id="report-table"><tr><th>Рука</th><th>Ошибок</th><th>Всего</th><th>% ошибок</th></tr>'; for(const [hand,data] of sorted) { const rate=data.total>0?(data.errors/data.total*100):0; const cls=rate>30?'err-high':(rate>0?'err-mid':'err-low'); html+=`<tr><td><b>${hand}</b></td><td>${data.errors}</td><td>${data.total}</td><td class="${cls}">${rate.toFixed(1)}%</td></tr>`; } html+='</table>'; tc.innerHTML=html; } const displayRangeId=(selectedId&&selectedId!=='__all__'&&findItemInTreeById(state.tree,selectedId)?.type==='range')?selectedId:null; updateCellsForRange(displayRangeId); clearAllCellHighlights(); for(const [hand,data] of Object.entries(agg)) { const cell=cellElements.get(hand); if(!cell) continue; const rate=data.total>0?data.errors/data.total:0; cell.querySelectorAll('.badge').forEach(b=>b.remove()); if(data.errors>0) { const badge=document.createElement('div'); badge.className='badge'; if(rate>0.3) badge.classList.add('error'); else if(rate>0) badge.classList.add('success'); badge.textContent=data.errors; cell.appendChild(badge); cell.style.borderColor=rate>0.3?'#ef4444':(rate>0?'#22c55e':'transparent'); } else cell.style.borderColor='transparent'; const label=cell.querySelector('.cell-label'); if(label) cell.appendChild(label); } }
-    function resetStatistics() { if(!confirm('Сбросить всю статистику?')) return; state.statistics.train=[]; state.statistics.memory=[]; state.trainCounts={correct:0,wrong:0}; state.memoryCounts={correct:0,wrong:0}; saveData(); document.getElementById('train-correct-count').textContent='0'; document.getElementById('train-wrong-count').textContent='0'; document.getElementById('memory-correct-count').textContent='0'; document.getElementById('memory-wrong-count').textContent='0'; renderReport(); clearAllCellHighlights(); clearInlineCellBorders(); for(const cell of cellElements.values()) { cell.querySelectorAll('.badge').forEach(b=>b.remove()); cell.style.borderColor=''; } }
+    async function resetStatistics() { const ok = await customConfirm('Сбросить всю статистику?'); if(!ok) return; state.statistics.train=[]; state.statistics.memory=[]; state.trainCounts={correct:0,wrong:0}; state.memoryCounts={correct:0,wrong:0}; saveData(); document.getElementById('train-correct-count').textContent='0'; document.getElementById('train-wrong-count').textContent='0'; document.getElementById('memory-correct-count').textContent='0'; document.getElementById('memory-wrong-count').textContent='0'; renderReport(); clearAllCellHighlights(); clearInlineCellBorders(); for(const cell of cellElements.values()) { cell.querySelectorAll('.badge').forEach(b=>b.remove()); cell.style.borderColor=''; } }
 
     function startTimer(mode) { stopTimer(); state.timerMode=mode; state.timerStart=Date.now(); updateTimerDisplay(); state.timerInterval=setInterval(updateTimerDisplay,500); }
     function stopTimer() { if(state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval=null; } state.timerMode=null; state.timerStart=0; }
@@ -537,8 +494,209 @@
 
     function handleKeyDown(e) { const tag=document.activeElement.tagName; const isInput=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'; const ctrl=e.ctrlKey||e.metaKey; if(e.key==='F2'&&state.mode==='editor'&&state.activeTreeElementId&&!isInput) { e.preventDefault(); const item=findItemInTreeById(state.tree,state.activeTreeElementId); if(item) startRename(item); return; } if(e.key==='T'&&!ctrl&&!isInput&&!e.shiftKey) { e.preventDefault(); const modes=['editor','train','memory','report']; setMode(modes[(modes.indexOf(state.mode)+1)%modes.length]); if(state.mode==='train') startTraining(); return; } if(state.mode==='train'&&!state.trainState.answered&&!isInput) { let type=null; if(e.key==='R'||e.key==='r'||e.key==='К'||e.key==='к') type='РЕЙЗ'; if(e.key==='C'||e.key==='c'||e.key==='С'||e.key==='с') type='КОЛЛ'; if(e.key==='F'||e.key==='f'||e.key==='А'||e.key==='а') type='ФОЛД'; if(e.key==='A'||e.key==='a'||e.key==='Ф'||e.key==='ф') type=e.key==='A'||e.key==='a'?'АЛЛ-ИН':'ФОЛД'; if(type) { e.preventDefault(); const btn=document.querySelector(`#train-answers .answer-btn[data-brush-type="${type}"]`); if(btn) btn.click(); } return; } if(state.mode==='memory'&&!isInput) { let type=null; if(e.key==='R'||e.key==='r'||e.key==='К'||e.key==='к') type='РЕЙЗ'; if(e.key==='C'||e.key==='c'||e.key==='С'||e.key==='с') type='КОЛЛ'; if(e.key==='F'||e.key==='f'||e.key==='А'||e.key==='а') type='ФОЛД'; if(e.key==='A'||e.key==='a'||e.key==='Ф'||e.key==='ф') type=e.key==='A'||e.key==='a'?'АЛЛ-ИН':'ФОЛД'; if(type) { e.preventDefault(); const btn=document.querySelector(`#memory-brush-buttons .answer-btn[data-brush-type="${type}"]`); if(btn) btn.click(); } } }
 
-    function init() { const loaded=loadData(); if(!loaded) { state.brushes=[]; state.tree=[]; state.statistics={train:[],memory:[]}; state.selectedBrushes=new Set([BUILTIN_FOLD_ID]); state.trainCounts={correct:0,wrong:0}; state.memoryCounts={correct:0,wrong:0}; } ensureBuiltinFold(); buildGrid(); setMode('editor'); fullRender(); document.addEventListener('mouseup',onGlobalMouseUp); document.addEventListener('keydown',handleKeyDown); document.querySelectorAll('.mode-tab').forEach(tab=>tab.addEventListener('click',()=>{ const mode=tab.dataset.mode; setMode(mode); if(mode==='train') startTraining(); })); document.getElementById('btn-add-brush').addEventListener('click',showAddBrushForm); document.getElementById('btn-cancel-brush').addEventListener('click',hideAddBrushForm); document.getElementById('btn-save-brush').addEventListener('click',()=>{ const type=document.getElementById('brush-type-select').value; const name=document.getElementById('brush-name-input').value.trim()||type; const color=document.getElementById('brush-color-input').value; state.brushes.push({id:genId(),type,name,color,builtin:false}); state.selectedBrushes.clear(); state.selectedBrushes.add(state.brushes[state.brushes.length-1].id); saveData(); hideAddBrushForm(); renderBrushes(); }); document.getElementById('brush-type-select').addEventListener('change',function(){document.getElementById('brush-name-input').value=this.value;}); const palette=document.getElementById('color-palette'); POPULAR_COLORS.forEach(color=>{ const dot=document.createElement('span'); dot.className='color-dot'; dot.style.backgroundColor=color; dot.dataset.color=color; dot.addEventListener('click',()=>{document.getElementById('brush-color-input').value=color; updateColorPaletteHighlight(color);}); palette.appendChild(dot); }); document.getElementById('brush-color-input').addEventListener('input',function(){updateColorPaletteHighlight(this.value);}); document.getElementById('btn-add-folder').addEventListener('click',addFolder); document.getElementById('btn-add-range').addEventListener('click',addRange); document.getElementById('scenario-action').addEventListener('change',toggleRaiseSizeInput); document.getElementById('btn-scenario-save').addEventListener('click',saveScenario); document.getElementById('btn-scenario-cancel').addEventListener('click',closeScenarioModal); document.getElementById('scenario-modal').addEventListener('click',function(e){if(e.target===this) closeScenarioModal();}); document.getElementById('btn-toggle-grid-train').addEventListener('click',()=>{ state.trainState.showGrid=!state.trainState.showGrid; const gw=document.getElementById('grid-wrapper'); if(state.trainState.showGrid) { gw.classList.remove('invisible'); if(state.trainState.currentRangeId) { updateCellsForRange(state.trainState.currentRangeId); if(state.trainState.currentHand) highlightCellInTrain(state.trainState.currentHand); } } else gw.classList.add('invisible'); }); document.getElementById('btn-check-memory').addEventListener('click',checkMemory); document.getElementById('btn-toggle-grid-memory').addEventListener('click',()=>{ state.memoryState.showGrid=!state.memoryState.showGrid; const gw=document.getElementById('grid-wrapper'); const ar=getActiveRange(); if(state.memoryState.showGrid) { gw.classList.remove('invisible'); if(ar&&ar.type==='range') updateCellsForRange(ar.id,true); for(const hand of Object.keys(state.memoryState.userChart)) renderMemoryCell(hand); } else { gw.classList.add('invisible'); setAllCellsNeutral(); for(const hand of Object.keys(state.memoryState.userChart)) renderMemoryCell(hand); } }); document.getElementById('report-mode-select').addEventListener('change',()=>{ renderReportTree(); renderReport(); }); document.getElementById('btn-reset-stats').addEventListener('click',resetStatistics); document.getElementById('btn-reset-timer').addEventListener('click',resetTimer); document.getElementById('btn-export').addEventListener('click',()=>{ const data={version:DATA_VERSION,brushes:state.brushes,tree:state.tree,statistics:state.statistics}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='preflop_trainer_v4_'+new Date().toISOString().slice(0,10)+'.json'; a.click(); URL.revokeObjectURL(url); }); document.getElementById('btn-import').addEventListener('click',()=>document.getElementById('import-file').click()); document.getElementById('import-file').addEventListener('change',function(){ if(this.files&&this.files[0]) { const reader=new FileReader(); reader.onload=function(e){ try{ const data=JSON.parse(e.target.result); if(data.version!==DATA_VERSION) { alert('Неверная версия данных. Ожидается '+DATA_VERSION); return; } if(!confirm('Заменить все текущие данные импортированными?')) return; state.brushes=data.brushes||[]; state.tree=data.tree||[]; state.statistics=data.statistics||{train:[],memory:[]}; state.trainCounts={correct:0,wrong:0}; state.memoryCounts={correct:0,wrong:0}; state.selectedBrushes=new Set([BUILTIN_FOLD_ID]); state.activeRangeId=null; state.activeTreeElementId=null; ensureBuiltinFold(); saveData(); setMode('editor'); fullRender(); } catch(err){ alert('Ошибка: '+err.message); } }; reader.readAsText(this.files[0]); this.value=''; } }); if(state.mode==='train') startTraining(); }
-    function fullRender() { renderBrushes(); renderTree(); updateCellsForRange(state.activeRangeId); document.getElementById('train-correct-count').textContent=state.trainCounts.correct; document.getElementById('train-wrong-count').textContent=state.trainCounts.wrong; document.getElementById('memory-correct-count').textContent=state.memoryCounts.correct; document.getElementById('memory-wrong-count').textContent=state.memoryCounts.wrong; document.getElementById('timer-display').textContent='00:00'; }
+    async function autoLoadRanges() {
+        if (state.brushes.length > 1 || state.tree.length > 0) return;
+        let url = null;
+        const params = new URLSearchParams(window.location.search);
+        const loadParam = params.get('load');
+        if (loadParam) {
+            url = loadParam;
+        } else {
+            url = 'default_ranges.json';
+        }
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Файл не найден');
+            const data = await response.json();
+            if (data.version !== DATA_VERSION) {
+                alert('Неверная версия данных в файле автоимпорта. Ожидается версия ' + DATA_VERSION);
+                return;
+            }
+            state.brushes = data.brushes || [];
+            state.tree = data.tree || [];
+            state.statistics = { train: [], memory: [] };
+            state.trainCounts = { correct: 0, wrong: 0 };
+            state.memoryCounts = { correct: 0, wrong: 0 };
+            state.selectedBrushes = new Set([BUILTIN_FOLD_ID]);
+            state.activeRangeId = null;
+            state.activeTreeElementId = null;
+            ensureBuiltinFold();
+            saveData();
+            fullRender();
+            setMode('editor');
+        } catch (e) {
+            console.log('Автозагрузка диапазонов не выполнена: ' + e.message);
+        }
+    }
+
+    async function init() {
+        const loaded = loadData();
+        if (!loaded) {
+            state.brushes = [];
+            state.tree = [];
+            state.statistics = { train: [], memory: [] };
+            state.selectedBrushes = new Set([BUILTIN_FOLD_ID]);
+            state.trainCounts = { correct: 0, wrong: 0 };
+            state.memoryCounts = { correct: 0, wrong: 0 };
+        }
+        ensureBuiltinFold();
+        buildGrid();
+        setMode('editor');
+        fullRender();
+
+        await autoLoadRanges();
+
+        document.addEventListener('mouseup', onGlobalMouseUp);
+        document.addEventListener('keydown', handleKeyDown);
+
+        document.querySelectorAll('.mode-tab').forEach(tab => tab.addEventListener('click', () => {
+            const mode = tab.dataset.mode;
+            setMode(mode);
+            if (mode === 'train') startTraining();
+        }));
+
+        document.getElementById('btn-add-brush').addEventListener('click', showAddBrushForm);
+        document.getElementById('btn-cancel-brush').addEventListener('click', hideAddBrushForm);
+        document.getElementById('btn-save-brush').addEventListener('click', () => {
+            const type = document.getElementById('brush-type-select').value;
+            const name = document.getElementById('brush-name-input').value.trim() || type;
+            const color = document.getElementById('brush-color-input').value;
+            state.brushes.push({ id: genId(), type, name, color, builtin: false });
+            state.selectedBrushes.clear();
+            state.selectedBrushes.add(state.brushes[state.brushes.length - 1].id);
+            saveData();
+            hideAddBrushForm();
+            renderBrushes();
+        });
+        document.getElementById('brush-type-select').addEventListener('change', function () {
+            document.getElementById('brush-name-input').value = this.value;
+        });
+
+        const palette = document.getElementById('color-palette');
+        POPULAR_COLORS.forEach(color => {
+            const dot = document.createElement('span');
+            dot.className = 'color-dot';
+            dot.style.backgroundColor = color;
+            dot.dataset.color = color;
+            dot.addEventListener('click', () => {
+                document.getElementById('brush-color-input').value = color;
+                updateColorPaletteHighlight(color);
+            });
+            palette.appendChild(dot);
+        });
+        document.getElementById('brush-color-input').addEventListener('input', function () {
+            updateColorPaletteHighlight(this.value);
+        });
+
+        document.getElementById('btn-add-folder').addEventListener('click', addFolder);
+        document.getElementById('btn-add-range').addEventListener('click', addRange);
+
+        document.getElementById('scenario-action').addEventListener('change', toggleRaiseSizeInput);
+        document.getElementById('btn-scenario-save').addEventListener('click', saveScenario);
+        document.getElementById('btn-scenario-cancel').addEventListener('click', closeScenarioModal);
+        document.getElementById('scenario-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeScenarioModal();
+        });
+
+        document.getElementById('btn-toggle-grid-train').addEventListener('click', () => {
+            state.trainState.showGrid = !state.trainState.showGrid;
+            const gw = document.getElementById('grid-wrapper');
+            if (state.trainState.showGrid) {
+                gw.classList.remove('invisible');
+                if (state.trainState.currentRangeId) {
+                    updateCellsForRange(state.trainState.currentRangeId);
+                    if (state.trainState.currentHand) highlightCellInTrain(state.trainState.currentHand);
+                }
+            } else gw.classList.add('invisible');
+        });
+
+        document.getElementById('btn-check-memory').addEventListener('click', checkMemory);
+
+        document.getElementById('btn-toggle-grid-memory').addEventListener('click', () => {
+            state.memoryState.showGrid = !state.memoryState.showGrid;
+            const gw = document.getElementById('grid-wrapper');
+            const ar = getActiveRange();
+            if (state.memoryState.showGrid) {
+                gw.classList.remove('invisible');
+                if (ar && ar.type === 'range') updateCellsForRange(ar.id, true);
+                for (const hand of Object.keys(state.memoryState.userChart)) renderMemoryCell(hand);
+            } else {
+                gw.classList.add('invisible');
+                setAllCellsNeutral();
+                for (const hand of Object.keys(state.memoryState.userChart)) renderMemoryCell(hand);
+            }
+        });
+
+        document.getElementById('report-mode-select').addEventListener('change', () => {
+            renderReportTree();
+            renderReport();
+        });
+
+        document.getElementById('btn-reset-stats').addEventListener('click', resetStatistics);
+
+        document.getElementById('btn-reset-timer').addEventListener('click', resetTimer);
+
+        document.getElementById('btn-export').addEventListener('click', () => {
+            const data = { version: DATA_VERSION, brushes: state.brushes, tree: state.tree, statistics: state.statistics };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'preflop_trainer_v4_' + new Date().toISOString().slice(0, 10) + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
+        document.getElementById('import-file').addEventListener('change', async function () {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.version !== DATA_VERSION) {
+                            alert('Неверная версия данных. Ожидается версия ' + DATA_VERSION);
+                            return;
+                        }
+                        const ok = await customConfirm('Заменить все текущие данные импортированными? Это нельзя отменить.');
+                        if (!ok) return;
+                        state.brushes = data.brushes || [];
+                        state.tree = data.tree || [];
+                        state.statistics = data.statistics || { train: [], memory: [] };
+                        state.trainCounts = { correct: 0, wrong: 0 };
+                        state.memoryCounts = { correct: 0, wrong: 0 };
+                        state.selectedBrushes = new Set([BUILTIN_FOLD_ID]);
+                        state.activeRangeId = null;
+                        state.activeTreeElementId = null;
+                        ensureBuiltinFold();
+                        saveData();
+                        setMode('editor');
+                        fullRender();
+                    } catch (err) {
+                        alert('Ошибка при чтении файла: ' + err.message);
+                    }
+                };
+                reader.readAsText(this.files[0]);
+                this.value = '';
+            }
+        });
+
+        if (state.mode === 'train') startTraining();
+    }
+
+    function fullRender() {
+        renderBrushes();
+        renderTree();
+        updateCellsForRange(state.activeRangeId);
+        document.getElementById('train-correct-count').textContent = state.trainCounts.correct;
+        document.getElementById('train-wrong-count').textContent = state.trainCounts.wrong;
+        document.getElementById('memory-correct-count').textContent = state.memoryCounts.correct;
+        document.getElementById('memory-wrong-count').textContent = state.memoryCounts.wrong;
+        document.getElementById('timer-display').textContent = '00:00';
+    }
+
     init();
 })();
 </script>
+</body>
+</html>
