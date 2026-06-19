@@ -1376,7 +1376,6 @@
             const params = new URLSearchParams(window.location.search);
             const loadParam = params.get('load');
             
-            // Если есть ?load=, загружаем всегда
             if (loadParam) {
                 try {
                     const resp = await fetch(loadParam);
@@ -1391,15 +1390,12 @@
                             state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
                             ensureBuiltinFold();
                             saveData();
-                            fullRender();
-                            setMode('editor');
-                            return;
+                            return true;
                         }
                     }
                 } catch (e) {}
             }
             
-            // Если нет ?load= и localStorage пуст, пробуем default_ranges.json
             if (state.tree.length === 0 && state.brushes.length <= 1) {
                 try {
                     const resp = await fetch('default_ranges.json');
@@ -1414,12 +1410,12 @@
                             state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
                             ensureBuiltinFold();
                             saveData();
-                            fullRender();
-                            setMode('editor');
+                            return true;
                         }
                     }
                 } catch (e) {}
             }
+            return false;
         }
 
         function fullRender() {
@@ -1449,14 +1445,17 @@
             }
         });
 
-        function init() {
+        async function init() {
             if (!loadData()) {
                 state.brushes = []; state.tree = []; state.statistics = { train: [], memory: [] };
             }
             ensureBuiltinFold();
             buildGrid();
+            const loaded = await autoLoadRanges();
+            if (loaded) {
+                fullRender();
+            }
             setMode('editor');
-            autoLoadRanges();
         }
         document.getElementById('btn-add-folder').onclick = addFolder;
         document.getElementById('btn-add-range').onclick = addRange;
