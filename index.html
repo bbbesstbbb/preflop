@@ -1373,11 +1373,10 @@
         };
 
         async function autoLoadRanges() {
-            // Всегда проверяем URL-параметр ?load=
             const params = new URLSearchParams(window.location.search);
             const loadParam = params.get('load');
             
-            // Если есть параметр ?load=, загружаем указанный файл ПРИНУДИТЕЛЬНО
+            // Если есть ?load=, загружаем всегда
             if (loadParam) {
                 try {
                     const resp = await fetch(loadParam);
@@ -1393,13 +1392,14 @@
                             ensureBuiltinFold();
                             saveData();
                             fullRender();
+                            setMode('editor');
                             return;
                         }
                     }
                 } catch (e) {}
             }
             
-            // Если параметра ?load= нет, но localStorage пуст, загружаем default_ranges.json
+            // Если нет ?load= и localStorage пуст, пробуем default_ranges.json
             if (state.tree.length === 0 && state.brushes.length <= 1) {
                 try {
                     const resp = await fetch('default_ranges.json');
@@ -1415,6 +1415,7 @@
                             ensureBuiltinFold();
                             saveData();
                             fullRender();
+                            setMode('editor');
                         }
                     }
                 } catch (e) {}
