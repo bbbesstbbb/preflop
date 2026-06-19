@@ -493,7 +493,6 @@
             if (state.mode === 'memory') { state.isDrawing = true; state.isShiftDrawing = false; applyMemoryBrush(hand); return; }
             if (state.mode === 'editor' && !e.shiftKey) { state.isDrawing = true; state.isShiftDrawing = false; applyBrushReplace(hand); return; }
         }
-
         function onCellMouseEnter(e) {
             if (!state.isDrawing) return;
             const hand = e.currentTarget.dataset.hand;
@@ -501,7 +500,6 @@
             else if (state.mode === 'selection' && state.isShiftDrawing) toggleSelectionMark(hand);
             else if (state.mode === 'memory') applyMemoryBrush(hand);
         }
-
         document.addEventListener('mouseup', () => { state.isDrawing = false; state.isShiftDrawing = false; });
 
         function toggleTrainMark(hand) {
@@ -511,7 +509,6 @@
             saveData();
             updateCellDisplay(cellElements.get(hand), hand, r.chart, r.train, false);
         }
-
         function toggleSelectionMark(hand) {
             const range = getActiveRange(); if (!range) return;
             const model = findItemInTreeById(state.selectionTree, state.activeSelectionModelId);
@@ -523,7 +520,6 @@
             updateSelectionGrid();
             renderSelectionRangeTree();
         }
-
         function applyBrushReplace(hand) {
             const range = getActiveRange(); if (!range) return;
             range.chart = range.chart || {};
@@ -535,13 +531,11 @@
             saveData();
             updateCellDisplay(cellElements.get(hand), hand, range.chart, range.train, true);
         }
-
         function applyMemoryBrush(hand) {
             state.memoryState.userChart[hand] = state.memoryState.selectedMemBrushId;
             state.memoryState.checked = false;
             renderMemoryCell(hand);
         }
-
         function renderMemoryCell(hand) {
             const cell = cellElements.get(hand); if (!cell) return;
             cell.querySelectorAll('.stripe,.badge').forEach(el => el.remove());
@@ -556,7 +550,6 @@
         function clearAllCellHighlights() {
             document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-train-hand','memory-correct','memory-wrong'));
         }
-
         function highlightCellInTrain(hand) {
             clearAllCellHighlights();
             const cell = cellElements.get(hand);
@@ -626,11 +619,9 @@
             document.getElementById('add-brush-form').style.display = 'flex';
             document.getElementById('brush-name-input').value = document.getElementById('brush-type-select').value;
         }
-
         document.getElementById('btn-add-brush').onclick = showAddBrushForm;
         document.getElementById('cancel-brush').onclick = () => document.getElementById('add-brush-form').style.display = 'none';
         document.getElementById('brush-type-select').onchange = function() { document.getElementById('brush-name-input').value = this.value; };
-
         (function initColorPalette() {
             const palette = document.getElementById('color-palette');
             POPULAR_COLORS.forEach(color => {
@@ -640,7 +631,6 @@
                 palette.appendChild(dot);
             });
         })();
-
         document.getElementById('save-brush').onclick = () => {
             const type = document.getElementById('brush-type-select').value;
             let name = document.getElementById('brush-name-input').value.trim() || type;
@@ -652,9 +642,16 @@
             document.getElementById('add-brush-form').style.display = 'none';
         };
 
-        function renderTree() { const container = document.getElementById('tree-container'); container.innerHTML = ''; renderTreeItems(state.tree, container, 0, true); }
-        function renderMemoryTree() { const container = document.getElementById('memory-tree-container'); container.innerHTML = ''; renderTreeItems(state.tree, container, 0, false); }
-
+        function renderTree() {
+            const container = document.getElementById('tree-container');
+            container.innerHTML = '';
+            renderTreeItems(state.tree, container, 0, true);
+        }
+        function renderMemoryTree() {
+            const container = document.getElementById('memory-tree-container');
+            container.innerHTML = '';
+            renderTreeItems(state.tree, container, 0, false);
+        }
         function renderTreeItems(items, container, depth, isEditor, selectionModel = null) {
             items.forEach(item => {
                 const div = document.createElement('div'); div.className = 'tree-item';
@@ -662,12 +659,14 @@
                 if (isEditor && !selectionModel) { div.draggable = true; div.dataset.treeId = item.id; }
                 const icon = item.type === 'folder' ? (item.expanded ? '📂' : '📁') : '📄';
                 div.innerHTML = `<span>${icon}</span> <span class="tree-name">${item.name}</span>`;
+                
                 if (isEditor && item.id === state.activeTreeElementId) div.classList.add('active-tree');
                 if (!isEditor && item.type === 'range' && item.id === state.activeRangeId) div.classList.add('active-tree');
                 if (selectionModel && item.type === 'range' && item.id === state.activeRangeId) div.classList.add('active-tree');
 
                 if (selectionModel) {
-                    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.style.marginLeft = 'auto';
+                    const cb = document.createElement('input'); cb.type = 'checkbox';
+                    cb.style.marginLeft = 'auto';
                     const ranges = item.type === 'folder' ? getAllRangesFromTree(item.children) : [item];
                     const marks = selectionModel.marks || {};
                     let allMarked = true, noneMarked = true;
@@ -768,7 +767,6 @@
             input.addEventListener('blur', () => finish(true));
             input.addEventListener('keydown', (e) => { if (e.key==='Enter') finish(true); if (e.key==='Escape') finish(false); });
         }
-
         function handleTreeDrop(dragId, targetId, position) {
             const dragItem = removeItemFromTree(state.tree, dragId);
             if (!dragItem) return;
@@ -785,7 +783,6 @@
             }
             saveData(); renderTree();
         }
-
         function copyRange(id) {
             const range = findItemInTreeById(state.tree, id);
             if (!range) return;
@@ -794,7 +791,6 @@
             insertAfterInTree(state.tree, id, copy);
             saveData(); renderTree();
         }
-
         async function deleteTreeItem(id) {
             if (!await customConfirm('Удалить элемент?')) return;
             removeItemFromTree(state.tree, id);
@@ -802,14 +798,12 @@
             if (state.activeTreeElementId === id) state.activeTreeElementId = null;
             saveData(); renderTree(); updateCellsForRange(null, true);
         }
-
         function addFolder() {
             const folder = { id: genId(), type: 'folder', name: 'Новая папка', expanded: true, children: [] };
             state.tree.push(folder);
             state.activeTreeElementId = folder.id;
             saveData(); renderTree();
         }
-
         function addRange() {
             const range = { id: genId(), type: 'range', name: 'Новый диапазон', chart: {}, train: {}, scenario: { position:'BTN', players:6, effectiveStack:100, actionBefore:'none', raiseSize:2.5 } };
             state.tree.push(range);
@@ -818,7 +812,6 @@
         }
 
         let scenarioEditingRangeId = null;
-
         function openScenarioModal(item) {
             scenarioEditingRangeId = item.id;
             document.getElementById('scenario-modal').style.display = 'flex';
@@ -830,14 +823,11 @@
             document.getElementById('scenario-raise-size').value = s.raiseSize;
             toggleRaiseSizeInput();
         }
-
         function toggleRaiseSizeInput() {
             const action = document.getElementById('scenario-action').value;
             document.getElementById('scenario-raise-size-container').style.display = ['raise','3bet','allin','limp'].includes(action) ? 'block' : 'none';
         }
-
         document.getElementById('scenario-action').onchange = toggleRaiseSizeInput;
-
         document.getElementById('save-scenario').onclick = () => {
             const range = findItemInTreeById(state.tree, scenarioEditingRangeId);
             if (range) {
@@ -852,7 +842,6 @@
             }
             document.getElementById('scenario-modal').style.display = 'none';
         };
-
         document.getElementById('cancel-scenario').onclick = () => document.getElementById('scenario-modal').style.display = 'none';
 
         function setMode(mode) {
@@ -875,7 +864,6 @@
             else if (mode === 'report') { updateReportModelSelect(); renderReport(); }
             document.querySelectorAll('#mode-tabs button').forEach(b => b.style.background = b.dataset.mode === mode ? 'var(--accent)' : '');
         }
-
         document.querySelectorAll('#mode-tabs button').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
 
         function setAllCellsNeutral() {
@@ -901,13 +889,17 @@
             });
         }
 
-        function renderSelectionModelTree() { const container = document.getElementById('selection-model-tree-container'); container.innerHTML = ''; renderSelectionModelTreeItems(state.selectionTree, container, 0); }
-
+        function renderSelectionModelTree() {
+            const container = document.getElementById('selection-model-tree-container');
+            container.innerHTML = '';
+            renderSelectionModelTreeItems(state.selectionTree, container, 0);
+        }
         function renderSelectionModelTreeItems(items, container, depth) {
             items.forEach(item => {
                 const div = document.createElement('div'); div.className = 'tree-item';
                 div.style.paddingLeft = (depth * 14 + 6) + 'px';
-                div.draggable = true; div.dataset.selectionId = item.id;
+                div.draggable = true;
+                div.dataset.selectionId = item.id;
                 const icon = item.type === 'folder' ? (state.selectionExpandedFolders.has(item.id) ? '📂' : '📁') : '📋';
                 div.innerHTML = `<span>${icon}</span> <span class="tree-name">${item.name}</span>`;
                 if (item.id === state.activeSelectionModelId && item.type === 'model') div.classList.add('active-tree');
@@ -945,6 +937,7 @@
                     input.addEventListener('blur', finish);
                     input.addEventListener('keydown', (ev) => { if (ev.key==='Enter') finish(); if (ev.key==='Escape') { input.value = item.name; finish(); } });
                 };
+
                 div.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({id:item.id})); });
                 div.addEventListener('dragover', (e) => { e.preventDefault(); const rect = div.getBoundingClientRect(); const y = e.clientY - rect.top; div.dataset.dropPosition = y < rect.height*0.25 ? 'before' : (y > rect.height*0.75 ? 'after' : 'inside'); });
                 div.addEventListener('dragleave', () => { div.dataset.dropPosition = ''; });
@@ -957,7 +950,6 @@
                 if (item.type === 'folder' && state.selectionExpandedFolders.has(item.id)) renderSelectionModelTreeItems(item.children, container, depth+1);
             });
         }
-
         function renderSelectionRangeTree() {
             const container = document.getElementById('selection-range-tree-container');
             container.innerHTML = '';
@@ -976,7 +968,8 @@
             if (!targetItem) { state.selectionTree.push(dragItem); saveData(); renderSelectionModelTree(); return; }
             if (position === 'inside' && targetItem.type === 'folder') {
                 if (isDescendant(state.selectionTree, dragId, targetId)) return;
-                targetItem.children.push(dragItem); state.selectionExpandedFolders.add(targetItem.id);
+                targetItem.children.push(dragItem);
+                state.selectionExpandedFolders.add(targetItem.id);
             } else {
                 const parentArray = findParentArray(state.selectionTree, targetId) || state.selectionTree;
                 const idx = parentArray.findIndex(i => i.id === targetId);
@@ -985,7 +978,6 @@
             }
             saveData(); renderSelectionModelTree();
         }
-
         function copySelectionModel(id) {
             const model = findItemInTreeById(state.selectionTree, id);
             if (!model || model.type !== 'model') return;
@@ -995,23 +987,22 @@
             state.activeSelectionModelId = copy.id;
             saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid();
         }
-
         async function deleteSelectionItem(id) {
             if (!await customConfirm('Удалить элемент?')) return;
             removeItemFromTree(state.selectionTree, id);
             if (state.activeSelectionModelId === id) state.activeSelectionModelId = null;
             saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid();
         }
-
         document.getElementById('btn-add-selection-folder').onclick = () => {
             const folder = { id: genId(), type: 'folder', name: 'Новая папка', expanded: true, children: [] };
-            state.selectionTree.push(folder); state.selectionExpandedFolders.add(folder.id);
+            state.selectionTree.push(folder);
+            state.selectionExpandedFolders.add(folder.id);
             saveData(); renderSelectionModelTree();
         };
-
         document.getElementById('btn-add-selection-model').onclick = () => {
             const model = { id: genId(), type: 'model', name: `Модель ${getAllModelsFromTree(state.selectionTree).length+1}`, marks: {} };
-            state.selectionTree.push(model); state.activeSelectionModelId = model.id;
+            state.selectionTree.push(model);
+            state.activeSelectionModelId = model.id;
             saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid();
         };
 
@@ -1033,17 +1024,18 @@
                 return hands;
             }
         }
-
         function updateTrainScore() {
             document.getElementById('train-score').textContent = `✅ ${state.trainCounts.correct} / ❌ ${state.trainCounts.wrong}`;
         }
-
         function startTraining() {
             clearTimeout(state.trainState.timeoutId);
             document.querySelectorAll('.cell').forEach(c => c.classList.remove('train-marked'));
             state.trainState.answered = false; state.trainState.feedback = '';
             const handsList = getAllTrainHandsWithRange();
-            if (handsList.length === 0) { document.getElementById('train-feedback').textContent = 'Нет отмеченных рук'; return; }
+            if (handsList.length === 0) {
+                document.getElementById('train-feedback').textContent = 'Нет отмеченных рук';
+                return;
+            }
             const pick = handsList[Math.floor(Math.random() * handsList.length)];
             state.trainState.currentHand = pick.hand; state.trainState.currentRangeId = pick.rangeId;
             const range = findItemInTreeById(state.tree, pick.rangeId);
@@ -1051,13 +1043,17 @@
             document.getElementById('train-hand-center').textContent = pick.hand;
             document.getElementById('train-stack-center').textContent = pick.scenario?.effectiveStack ? `Стек: ${pick.scenario.effectiveStack}bb` : '';
             updatePokerTable(pick.scenario);
-            if (state.trainState.showGrid) { document.getElementById('grid-wrapper').classList.remove('invisible'); updateCellsForRange(pick.rangeId, true); highlightCellInTrain(pick.hand); }
-            else { document.getElementById('grid-wrapper').classList.add('invisible'); }
+            if (state.trainState.showGrid) {
+                document.getElementById('grid-wrapper').classList.remove('invisible');
+                updateCellsForRange(pick.rangeId, true);
+                highlightCellInTrain(pick.hand);
+            } else {
+                document.getElementById('grid-wrapper').classList.add('invisible');
+            }
             renderTrainAnswerButtons(pick.rangeId);
             document.getElementById('train-feedback').textContent = '';
             updateTrainScore();
         }
-
         function renderTrainAnswerButtons(rangeId) {
             const container = document.getElementById('train-answer-buttons');
             container.innerHTML = '';
@@ -1080,12 +1076,12 @@
                 });
                 const label = document.createElement('div'); label.className = 'mixture-label';
                 label.textContent = mix.entries.map(e => getBrushById(e.brushId)?.name).join('/');
-                btn.appendChild(label); btn.dataset.patternKey = mix.key;
+                btn.appendChild(label);
+                btn.dataset.patternKey = mix.key;
                 btn.onclick = () => handleTrainingAnswer('mixture_' + idx, mix.key);
                 container.appendChild(btn);
             });
         }
-
         function handleTrainingAnswer(answerBrushId, patternKey = null) {
             if (state.trainState.answered || !state.trainState.currentHand) return;
             const range = findItemInTreeById(state.tree, state.trainState.currentRangeId);
@@ -1110,20 +1106,29 @@
                 state.trainState.feedback = `❌ Неверно. Правильно: ${correctText}`;
             }
             document.getElementById('train-feedback').textContent = state.trainState.feedback;
-            state.statistics.train.push({ hand, answer: answerBrushId, correct, correctType: correctMix ? 'mixture' : 'single', timestamp: Date.now(), rangeId: range.id, modelId: state.activeSelectionModelId });
+            state.statistics.train.push({
+                hand, answer: answerBrushId, correct,
+                correctType: correctMix ? 'mixture' : 'single',
+                timestamp: Date.now(), rangeId: range.id, modelId: state.activeSelectionModelId
+            });
             saveData(); updateTrainScore();
             state.trainState.timeoutId = setTimeout(startTraining, correct ? 500 : 1800);
         }
-
         function getPositionsForPlayers(n, heroPos) {
             let base;
             if (n <= 2) base = ['SB','BB'];
             else if (n <= 6) base = ['SB','BB','UTG','MP','CO','BTN'].slice(0, n);
-            else { const extra = n - 6; base = ['SB','BB','UTG']; for (let i = 1; i <= extra; i++) base.push('MP' + i); base.push('CO','BTN'); base = base.slice(0, n); }
-            const idx = base.indexOf(heroPos); const startIdx = idx !== -1 ? idx : 0;
+            else {
+                const extra = n - 6;
+                base = ['SB','BB','UTG'];
+                for (let i = 1; i <= extra; i++) base.push('MP' + i);
+                base.push('CO','BTN');
+                base = base.slice(0, n);
+            }
+            const idx = base.indexOf(heroPos);
+            const startIdx = idx !== -1 ? idx : 0;
             return [...base.slice(startIdx), ...base.slice(0, startIdx)];
         }
-
         function updatePokerTable(scenario) {
             const table = document.getElementById('poker-table');
             table.querySelectorAll('.seat').forEach(s => s.remove());
@@ -1154,7 +1159,6 @@
                 table.appendChild(seat);
             });
         }
-
         document.getElementById('btn-toggle-grid-train').onclick = () => {
             state.trainState.showGrid = !state.trainState.showGrid;
             document.getElementById('grid-wrapper').classList.toggle('invisible', !state.trainState.showGrid);
@@ -1188,7 +1192,6 @@
                 container.appendChild(btn);
             });
         }
-
         function applyMemoryBrushForMixture(patternKey) {
             const range = getActiveRange(); if (!range) return;
             Object.entries(range.chart || {}).forEach(([hand, entries]) => {
@@ -1198,7 +1201,6 @@
                 }
             });
         }
-
         function checkMemory() {
             const range = getActiveRange(); if (!range) return;
             let correct = 0, wrong = 0;
@@ -1213,9 +1215,7 @@
             state.statistics.memory.push({ hand:'all', correct, wrong, timestamp: Date.now(), rangeId: range.id, modelId: null });
             saveData();
         }
-
         document.getElementById('btn-check-memory').onclick = checkMemory;
-
         document.getElementById('btn-toggle-grid-memory').onclick = () => {
             state.memoryState.showGrid = !state.memoryState.showGrid;
             document.getElementById('grid-wrapper').classList.toggle('invisible', !state.memoryState.showGrid);
@@ -1231,7 +1231,6 @@
             });
             select.value = state.reportSelectedModelId || '__all__';
         }
-
         function renderReport() {
             const mode = document.getElementById('report-mode-select').value;
             const stats = mode === 'train' ? state.statistics.train : state.statistics.memory;
@@ -1293,7 +1292,6 @@
                 }
             } else updateCellsForRange(null);
         }
-
         function renderReportTreeItems(items, container, depth, stats, modelId) {
             items.forEach(item => {
                 const div = document.createElement('div'); div.className = 'tree-item';
@@ -1311,14 +1309,12 @@
                 if (item.type === 'folder' && state.reportExpandedFolders.has(item.id)) renderReportTreeItems(item.children, container, depth+1, stats, modelId);
             });
         }
-
         function computeItemAccuracy(item, stats, modelId) {
             const ranges = item.type === 'folder' ? getAllRangesFromTree(item.children) : [item];
             let relevant = stats.filter(s => ranges.some(r => r.id === s.rangeId));
             if (modelId && modelId !== '__all__') relevant = relevant.filter(s => s.modelId === modelId);
             return relevant.length ? Math.round(relevant.filter(s => s.correct).length / relevant.length * 100) : 0;
         }
-
         function filterStatsBySelection(stats, modelId) {
             let filtered = stats;
             if (state.reportSelectedId !== '__all__') {
@@ -1330,10 +1326,8 @@
             if (modelId && modelId !== '__all__') filtered = filtered.filter(s => s.modelId === modelId);
             return filtered;
         }
-
         document.getElementById('report-mode-select').onchange = renderReport;
         document.getElementById('report-model-select').onchange = renderReport;
-
         document.getElementById('btn-reset-stats').onclick = async () => {
             if (await customConfirm('Сбросить всю статистику?')) {
                 state.statistics = { train:[], memory:[] };
@@ -1349,7 +1343,6 @@
             const elapsed = Math.floor((Date.now() - state.timerStart) / 1000);
             document.getElementById('timer-display').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
         }
-
         document.getElementById('btn-reset-timer').onclick = () => { if (state.timerMode) startTimer(state.timerMode); };
 
         function customConfirm(msg) {
@@ -1369,9 +1362,7 @@
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
             a.download = `preflop_trainer_v4_${new Date().toISOString().slice(0,10)}.json`; a.click();
         };
-
         document.getElementById('btn-import').onclick = () => document.getElementById('import-file-input').click();
-
         document.getElementById('import-file-input').onchange = async function() {
             const file = this.files[0]; if (!file) return;
             const text = await file.text();
