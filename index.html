@@ -290,7 +290,7 @@
             statistics: { train: [], memory: [] },
             timerInterval: null, timerMode: null, timerStart: 0,
             reportSelectedId: '__all__', reportExpandedFolders: new Set(), reportSelectedModelId: '__all__',
-            selectionTree: [],
+            selectionTree: [],            // элементы: folder или model
             activeSelectionModelId: null,
             selectionExpandedFolders: new Set()
         };
@@ -1157,9 +1157,7 @@
             document.getElementById('grid-wrapper').classList.toggle('invisible', !state.trainState.showGrid);
             if (state.trainState.showGrid && state.trainState.currentRangeId) {
                 updateCellsForRange(state.trainState.currentRangeId, true);
-                if (state.trainState.currentHand) {
-                    highlightCellInTrain(state.trainState.currentHand);
-                }
+                if (state.trainState.currentHand) highlightCellInTrain(state.trainState.currentHand);
             }
         };
 
