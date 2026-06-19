@@ -1373,21 +1373,52 @@
         };
 
         async function autoLoadRanges() {
-            if (state.tree.length > 0 || state.brushes.length > 1) return;
+            // Всегда проверяем URL-параметр ?load=
             const params = new URLSearchParams(window.location.search);
-            const file = params.get('load') || 'default_ranges.json';
-            try {
-                const resp = await fetch(file);
-                if (!resp.ok) return;
-                const data = await resp.json();
-                if (data.version === 4) {
-                    state.brushes = data.brushes || state.brushes;
-                    state.tree = data.tree || [];
-                    state.statistics = data.statistics || state.statistics;
-                    state.selectionTree = data.selectionTree || [];
-                    ensureBuiltinFold(); saveData(); fullRender(); setMode('editor');
-                }
-            } catch (e) {}
+            const loadParam = params.get('load');
+            
+            // Если есть параметр ?load=, загружаем указанный файл ПРИНУДИТЕЛЬНО
+            if (loadParam) {
+                try {
+                    const resp = await fetch(loadParam);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.version === 4) {
+                            state.brushes = data.brushes || state.brushes;
+                            state.tree = data.tree || [];
+                            state.statistics = data.statistics || state.statistics;
+                            state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
+                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 };
+                            state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
+                            ensureBuiltinFold();
+                            saveData();
+                            fullRender();
+                            return;
+                        }
+                    }
+                } catch (e) {}
+            }
+            
+            // Если параметра ?load= нет, но localStorage пуст, загружаем default_ranges.json
+            if (state.tree.length === 0 && state.brushes.length <= 1) {
+                try {
+                    const resp = await fetch('default_ranges.json');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.version === 4) {
+                            state.brushes = data.brushes || state.brushes;
+                            state.tree = data.tree || [];
+                            state.statistics = data.statistics || state.statistics;
+                            state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
+                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 };
+                            state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
+                            ensureBuiltinFold();
+                            saveData();
+                            fullRender();
+                        }
+                    }
+                } catch (e) {}
+            }
         }
 
         function fullRender() {
