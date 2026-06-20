@@ -6,150 +6,84 @@
     <title>Префлоп‑тренажёр v4</title>
     <style>
         :root {
-            --bg: #1a1d23;
-            --panel-bg: #21252b;
-            --text: #d4d4d4;
-            --accent: #6366f1;
-            --accent-hover: #818cf8;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --warning: #fbbf24;
-            --cell-bg: #2a2d35;
-            --fold-color: #5a5f6b;
-            --border: #3a3f4b;
-            --radius: 8px;
+            --bg: #1a1d23; --panel-bg: #21252b; --text: #d4d4d4; --accent: #6366f1;
+            --accent-hover: #818cf8; --danger: #ef4444; --success: #22c55e; --warning: #fbbf24;
+            --cell-bg: #2a2d35; --fold-color: #5a5f6b; --border: #3a3f4b; --radius: 8px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
+            background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; user-select: none;
         }
         #left-panel {
-            width: 360px;
-            min-width: 360px;
-            background: var(--panel-bg);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border);
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 12px;
-            gap: 8px;
-            scrollbar-width: thin;
-            scrollbar-color: #4a4f5a #2a2d35;
+            width: 360px; min-width: 360px; background: var(--panel-bg); display: flex;
+            flex-direction: column; border-right: 1px solid var(--border); overflow-y: auto;
+            overflow-x: hidden; padding: 12px; gap: 8px; scrollbar-width: thin; scrollbar-color: #4a4f5a #2a2d35;
         }
         #left-panel::-webkit-scrollbar { width: 6px; }
         #left-panel::-webkit-scrollbar-track { background: #2a2d35; }
         #left-panel::-webkit-scrollbar-thumb { background: #4a4f5a; border-radius: 3px; }
         #right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px;
         }
-        #grid-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.25s;
-        }
+        #grid-wrapper { display: flex; align-items: center; justify-content: center; transition: opacity 0.25s; }
         #grid-wrapper.invisible { opacity: 0; pointer-events: none; }
         #grid-main {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-            background: #0003;
-            border-radius: var(--radius);
-            padding: 2px;
+            display: flex; flex-direction: column; gap: 1px; background: #0003; border-radius: var(--radius); padding: 2px;
         }
         .grid-row-cells { display: flex; gap: 1px; }
         .cell {
-            width: clamp(44px, 5.5vw, 60px);
-            height: clamp(44px, 5.5vw, 60px);
-            background: var(--cell-bg);
-            position: relative;
-            cursor: pointer;
-            border: 2px solid transparent;
-            border-radius: 2px;
-            transition: border-color 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: clamp(44px, 5.5vw, 60px); height: clamp(44px, 5.5vw, 60px);
+            background: var(--cell-bg); position: relative; cursor: pointer; border: 2px solid transparent;
+            border-radius: 2px; transition: border-color 0.1s; display: flex; align-items: center; justify-content: center;
         }
-        .cell.train-marked {
-            border-color: #c084fc;
-            box-shadow: inset 0 0 0 1px #c084fc;
-        }
-        .cell.active-train-hand {
-            border-color: var(--warning);
-            animation: activeGlow 1.2s ease-in-out infinite;
-        }
+        .cell.train-marked { border-color: #c084fc; box-shadow: inset 0 0 0 1px #c084fc; }
+        .cell.active-train-hand { border-color: var(--warning); animation: activeGlow 1.2s infinite; }
         .cell.memory-correct { border-color: var(--success); }
         .cell.memory-wrong { border-color: var(--danger); }
-        @keyframes activeGlow {
-            0%,100% { box-shadow: 0 0 6px var(--warning); }
-            50% { box-shadow: 0 0 12px var(--warning); }
-        }
+        @keyframes activeGlow { 0%,100%{ box-shadow: 0 0 6px var(--warning); } 50%{ box-shadow: 0 0 12px var(--warning); } }
         .cell-label {
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
-            pointer-events: none;
-            z-index: 2;
-            text-align: center;
-            line-height: 1.2;
+            font-size: 1.1rem; font-weight: 900; color: #fff; text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
+            pointer-events: none; z-index: 2; text-align: center; line-height: 1.2;
         }
         .stripe { position: absolute; left: 0; right: 0; z-index: 1; }
         .badge {
-            position: absolute;
-            top: 2px; left: 2px;
-            background: #000a; color: #fff;
-            font-size: 0.65rem; padding: 1px 4px;
-            border-radius: 10px; z-index: 3;
+            position: absolute; top: 2px; left: 2px; background: #000a; color: #fff;
+            font-size: 0.65rem; padding: 1px 4px; border-radius: 10px; z-index: 3;
         }
         .badge.error { background: var(--danger); }
         .badge.success { background: var(--success); }
         .brush-chip {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: #2a2d35; padding: 4px 10px; border-radius: 16px;
-            cursor: pointer; border: 2px solid transparent; margin: 3px; font-size: 0.9rem;
-            user-select: none;
+            display: inline-flex; align-items: center; gap: 6px; background: #2a2d35;
+            padding: 4px 10px; border-radius: 16px; cursor: pointer; border: 2px solid transparent;
+            margin: 3px; font-size: 0.9rem; user-select: none;
         }
         .brush-chip.selected { border-color: var(--accent); }
         .brush-chip.dragging { opacity: 0.5; }
         .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
         .del-brush { margin-left: 4px; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 1.1rem; }
         .tree-item {
-            display: flex; align-items: center; gap: 4px; padding: 4px 6px;
-            border-radius: 4px; cursor: pointer; transition: background 0.1s; position: relative;
+            display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 4px;
+            cursor: pointer; transition: background 0.1s; position: relative;
         }
         .tree-item:hover { background: #2a2d35; }
         .tree-item.active-tree { background: var(--accent); color: #fff; }
         .tree-actions { display: none; margin-left: auto; }
         .tree-item:hover .tree-actions { display: flex; gap: 4px; }
         button {
-            background: var(--accent); color: #fff; border: none;
-            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
-            transition: background 0.15s;
+            background: var(--accent); color: #fff; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.15s;
         }
         button:hover { background: var(--accent-hover); }
         button.danger { background: var(--danger); }
         button.danger:hover { background: #dc2626; }
         .modal-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: #000a; display: flex; align-items: center; justify-content: center; z-index: 100;
+            position: fixed; top:0; left:0; width:100%; height:100%; background: #000a;
+            display: flex; align-items: center; justify-content: center; z-index: 100;
         }
         .modal-content {
-            background: var(--panel-bg); padding: 20px; border-radius: 12px;
-            min-width: 300px; display: flex; flex-direction: column; gap: 12px;
+            background: var(--panel-bg); padding: 20px; border-radius: 12px; min-width: 300px;
+            display: flex; flex-direction: column; gap: 12px;
         }
         input, select {
             background: #2a2d35; border: 1px solid var(--border); color: var(--text);
@@ -157,20 +91,17 @@
         }
         .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         #poker-table {
-            width: 280px; height: 280px; border-radius: 50%;
-            background: #1e4d2b; border: 4px solid #2d6a3a; position: relative; margin: 10px auto;
+            width: 280px; height: 280px; border-radius: 50%; background: #1e4d2b;
+            border: 4px solid #2d6a3a; position: relative; margin: 10px auto;
         }
         .seat {
-            position: absolute; width: 44px; height: 44px;
-            background: #2a2d35; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-size: 0.8rem;
-            font-weight: bold; color: #fff; border: 2px solid #a0a0a0;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            position: absolute; width: 44px; height: 44px; background: #2a2d35; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+            font-weight: bold; color: #fff; border: 2px solid #a0a0a0; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         }
         .table-center-hand {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%);
-            font-size: 2.2rem; font-weight: 900; color: #fff;
-            text-shadow: 0 0 10px #000; z-index: 5;
+            font-size: 2.2rem; font-weight: 900; color: #fff; text-shadow: 0 0 10px #000; z-index: 5;
         }
         .table-center-stack {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, 20px);
@@ -192,48 +123,39 @@
 <body>
 <div id="left-panel">
     <div id="mode-tabs" class="flex-row">
-        <button data-mode="editor">✏️ Редактор</button>
-        <button data-mode="selection">🎯 Выборка</button>
-        <button data-mode="train">🏋️ Тренировка</button>
-        <button data-mode="memory">🧠 Память</button>
-        <button data-mode="report">📊 Отчёт</button>
+        <button data-mode="editor">✏️</button><button data-mode="selection">🎯</button><button data-mode="train">🏋️</button><button data-mode="memory">🧠</button><button data-mode="report">📊</button>
     </div>
     <div id="section-editor-brushes">
         <div class="flex-row"><span>Кисти:</span><button id="btn-add-brush">+</button></div>
         <div id="brush-list" class="flex-row"></div>
         <div id="add-brush-form" style="display:none; gap:4px; flex-direction:column;">
             <select id="brush-type-select"><option>РЕЙЗ</option><option>КОЛЛ</option><option>ФОЛД</option><option>АЛЛ-ИН</option><option>ЧЕК</option></select>
-            <input id="brush-name-input" placeholder="Название">
-            <div id="color-palette" class="flex-row"></div>
+            <input id="brush-name-input" placeholder="Название"><div id="color-palette" class="flex-row"></div>
             <input type="color" id="brush-color-input" value="#6366f1">
             <div class="flex-row"><button id="save-brush">Сохранить</button><button id="cancel-brush">Отмена</button></div>
         </div>
     </div>
     <div id="section-editor-tree">
-        <div class="flex-row"><button id="btn-add-folder">📁 Папка</button><button id="btn-add-range">📄 Диапазон</button></div>
+        <div class="flex-row"><button id="btn-add-folder">📁</button><button id="btn-add-range">📄</button></div>
         <div id="tree-container"></div>
     </div>
     <div id="section-selection" style="display:none;">
         <div id="selection-model-tree-container" style="margin-top:4px;"></div>
-        <div class="flex-row"><button id="btn-add-selection-folder">📁 Папка</button><button id="btn-add-selection-model">+ Модель</button></div>
+        <div class="flex-row"><button id="btn-add-selection-folder">📁</button><button id="btn-add-selection-model">+Модель</button></div>
         <div id="selection-range-tree-container" style="margin-top:8px;"></div>
     </div>
     <div id="section-train" style="display:none; flex-direction:column; gap:8px;">
         <div id="train-source-name"></div>
-        <div id="poker-table">
-            <div class="table-center-hand" id="train-hand-center"></div>
-            <div class="table-center-stack" id="train-stack-center"></div>
-        </div>
+        <div id="poker-table"><div class="table-center-hand" id="train-hand-center"></div><div class="table-center-stack" id="train-stack-center"></div></div>
         <div id="train-score" style="text-align:center; font-weight:bold;"></div>
         <div id="train-answer-buttons" class="flex-row"></div>
         <div id="train-feedback" style="text-align:center; font-weight:bold;"></div>
-        <button id="btn-toggle-grid-train">👁️ Сетка</button>
+        <button id="btn-toggle-grid-train">👁️</button>
     </div>
     <div id="section-memory" style="display:none; flex-direction:column; gap:8px;">
         <div id="memory-tree-container"></div>
         <div id="memory-brush-buttons" class="flex-row"></div>
-        <button id="btn-check-memory">✅ Проверить</button>
-        <button id="btn-toggle-grid-memory">👁️ Сетка</button>
+        <button id="btn-check-memory">✅</button><button id="btn-toggle-grid-memory">👁️</button>
     </div>
     <div id="section-report" style="display:none; flex-direction:column; gap:8px;">
         <select id="report-mode-select"><option value="train">Тренировка</option><option value="memory">Память</option></select>
@@ -241,31 +163,27 @@
         <div id="report-tree-container"></div>
         <div id="report-accuracy"></div>
         <div id="report-details"></div>
-        <button id="btn-reset-stats" class="danger">Сброс статистики</button>
+        <div id="report-models-list" style="margin-top:8px;"></div>
+        <button id="btn-reset-stats" class="danger">Сброс</button>
     </div>
     <div class="flex-row" style="margin-top:auto;">
-        <button id="btn-export">📥</button>
-        <button id="btn-import">📤</button>
-        <span id="timer-display">00:00</span>
-        <button id="btn-reset-timer">Сброс</button>
+        <button id="btn-export">📥</button><button id="btn-import">📤</button>
+        <span id="timer-display">00:00</span><button id="btn-reset-timer">Сброс</button>
     </div>
     <input type="file" id="import-file-input" accept=".json" style="display:none;">
 </div>
-<div id="right-panel">
-    <div id="grid-wrapper"><div id="grid-main"></div></div>
-</div>
+<div id="right-panel"><div id="grid-wrapper"><div id="grid-main"></div></div></div>
 <div id="scenario-modal" class="modal-overlay" style="display:none;"><div class="modal-content">
     <h3>Сценарий раздачи</h3>
-    <label>Позиция: <select id="scenario-position"><option>BTN</option><option>SB</option><option>BB</option><option>UTG</option><option>MP</option><option>CO</option></select></label>
-    <label>Игроков: <input id="scenario-players" type="number" min="2" max="9" value="6"></label>
-    <label>Стек (bb): <input id="scenario-stack" type="number" value="100"></label>
-    <label>Действие перед: <select id="scenario-action"><option value="none">Нет</option><option value="limp">Лимп</option><option value="raise">Рейз</option><option value="3bet">3-бет</option><option value="allin">Алл-ин</option></select></label>
-    <div id="scenario-raise-size-container"><label>Размер рейза: <input id="scenario-raise-size" type="number" step="0.1" value="2.5"></label></div>
+    <label>Поз:<select id="scenario-position"><option>BTN</option><option>SB</option><option>BB</option><option>UTG</option><option>MP</option><option>CO</option></select></label>
+    <label>Игр:<input id="scenario-players" type="number" min="2" max="9" value="6"></label>
+    <label>Стек:<input id="scenario-stack" type="number" value="100"></label>
+    <label>До:<select id="scenario-action"><option value="none">Нет</option><option value="limp">Лимп</option><option value="raise">Рейз</option><option value="3bet">3-бет</option><option value="allin">Алл-ин</option></select></label>
+    <div id="scenario-raise-size-container"><label>Размер:<input id="scenario-raise-size" type="number" step="0.1" value="2.5"></label></div>
     <div class="flex-row"><button id="save-scenario">Сохранить</button><button id="cancel-scenario">Отмена</button></div>
 </div></div>
 <div id="confirm-modal" class="modal-overlay" style="display:none;"><div class="modal-content">
-    <p id="confirm-message"></p>
-    <div class="flex-row"><button id="confirm-no">Отмена</button><button id="confirm-yes" class="danger">Да</button></div>
+    <p id="confirm-message"></p><div class="flex-row"><button id="confirm-no">Нет</button><button id="confirm-yes" class="danger">Да</button></div>
 </div></div>
 <script>
     (function() {
@@ -275,24 +193,14 @@
         const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
 
         const state = {
-            mode: 'editor',
-            brushes: [],
-            tree: [],
-            activeRangeId: null,
-            activeTreeElementId: null,
-            selectedBrushes: new Set(),
-            trainCounts: { correct: 0, wrong: 0 },
-            memoryCounts: { correct: 0, wrong: 0 },
-            isDrawing: false,
-            isShiftDrawing: false,
+            mode: 'editor', brushes: [], tree: [], activeRangeId: null, activeTreeElementId: null,
+            selectedBrushes: new Set(), trainCounts: { correct: 0, wrong: 0 },
+            memoryCounts: { correct: 0, wrong: 0 }, isDrawing: false, isShiftDrawing: false,
             trainState: { currentHand: null, currentRangeId: null, answered: false, feedback: '', showGrid: true, timeoutId: null },
             memoryState: { userChart: {}, checked: false, selectedMemBrushId: BUILTIN_FOLD_ID, showGrid: true },
-            statistics: { train: [], memory: [] },
-            timerInterval: null, timerMode: null, timerStart: 0,
+            statistics: { train: [], memory: [] }, timerInterval: null, timerMode: null, timerStart: 0,
             reportSelectedId: '__all__', reportExpandedFolders: new Set(), reportSelectedModelId: '__all__',
-            selectionTree: [],
-            activeSelectionModelId: null,
-            selectionExpandedFolders: new Set()
+            selectionTree: [], activeSelectionModelId: null, selectionExpandedFolders: new Set()
         };
         const cellElements = new Map();
 
@@ -302,131 +210,81 @@
             if (row < col) return RANKS[row] + RANKS[col] + 's';
             return RANKS[col] + RANKS[row] + 'o';
         }
-        function getAllHands() {
-            const hands = [];
-            for (let r=0; r<13; r++) for (let c=0; c<13; c++) hands.push(getHandName(r,c));
-            return hands;
-        }
+        function getAllHands() { const hands = []; for (let r=0; r<13; r++) for (let c=0; c<13; c++) hands.push(getHandName(r,c)); return hands; }
 
         function saveData() {
             localStorage.setItem('preflop_trainer_v4', JSON.stringify({
-                version: 4, brushes: state.brushes, tree: state.tree,
-                statistics: state.statistics, trainCounts: state.trainCounts,
-                memoryCounts: state.memoryCounts, selectionTree: state.selectionTree,
-                activeSelectionModelId: state.activeSelectionModelId
+                version: 4, brushes: state.brushes, tree: state.tree, statistics: state.statistics,
+                trainCounts: state.trainCounts, memoryCounts: state.memoryCounts,
+                selectionTree: state.selectionTree, activeSelectionModelId: state.activeSelectionModelId
             }));
         }
-
         function loadData() {
-            const raw = localStorage.getItem('preflop_trainer_v4');
-            if (!raw) return false;
+            const raw = localStorage.getItem('preflop_trainer_v4'); if (!raw) return false;
             try {
-                const data = JSON.parse(raw);
-                if (data.version !== 4) return false;
-                state.brushes = data.brushes || [];
-                state.tree = data.tree || [];
+                const data = JSON.parse(raw); if (data.version !== 4) return false;
+                state.brushes = data.brushes || []; state.tree = data.tree || [];
                 state.statistics = data.statistics || { train: [], memory: [] };
                 state.trainCounts = data.trainCounts || { correct:0, wrong:0 };
                 state.memoryCounts = data.memoryCounts || { correct:0, wrong:0 };
-                if (data.selectionTree) {
-                    state.selectionTree = data.selectionTree;
-                } else if (data.selectionModels) {
-                    state.selectionTree = data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} }));
-                } else {
-                    state.selectionTree = [];
-                }
+                if (data.selectionTree) state.selectionTree = data.selectionTree;
+                else if (data.selectionModels) state.selectionTree = data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} }));
+                else state.selectionTree = [];
                 state.activeSelectionModelId = data.activeSelectionModelId || null;
-                state.selectedBrushes = new Set([BUILTIN_FOLD_ID]);
-                state.selectionExpandedFolders = new Set();
+                state.selectedBrushes = new Set([BUILTIN_FOLD_ID]); state.selectionExpandedFolders = new Set();
                 return true;
             } catch { return false; }
         }
-
         function ensureBuiltinFold() {
-            if (!state.brushes.find(b => b.id === BUILTIN_FOLD_ID)) {
-                state.brushes.unshift({ id: BUILTIN_FOLD_ID, type: 'ФОЛД', name: 'ФОЛД', color: DEFAULT_FOLD_COLOR, builtin: true });
-            }
+            if (!state.brushes.find(b => b.id === BUILTIN_FOLD_ID)) state.brushes.unshift({ id: BUILTIN_FOLD_ID, type: 'ФОЛД', name: 'ФОЛД', color: DEFAULT_FOLD_COLOR, builtin: true });
             if (state.selectedBrushes.size === 0) state.selectedBrushes.add(BUILTIN_FOLD_ID);
         }
-
         function getBrushById(id) { return state.brushes.find(b => b.id === id); }
         function findItemInTreeById(tree, id) {
-            for (const item of tree) {
-                if (item.id === id) return item;
-                if (item.type === 'folder') {
-                    const found = findItemInTreeById(item.children, id);
-                    if (found) return found;
-                }
-            }
+            for (const item of tree) { if (item.id === id) return item; if (item.type === 'folder') { const f = findItemInTreeById(item.children, id); if (f) return f; } }
             return null;
         }
         function findParentArray(tree, id) {
-            for (const item of tree) {
-                if (item.id === id) return tree;
-                if (item.type === 'folder') {
-                    const found = findParentArray(item.children, id);
-                    if (found) return found;
-                }
-            }
+            for (const item of tree) { if (item.id === id) return tree; if (item.type === 'folder') { const p = findParentArray(item.children, id); if (p) return p; } }
             return null;
         }
         function isDescendant(tree, parentId, childId) {
             if (parentId === childId) return true;
-            const parent = findItemInTreeById(tree, parentId);
-            if (!parent || parent.type !== 'folder') return false;
+            const parent = findItemInTreeById(tree, parentId); if (!parent || parent.type !== 'folder') return false;
             return !!findItemInTreeById(parent.children, childId);
         }
         function removeItemFromTree(tree, id) {
-            for (let i=0; i<tree.length; i++) {
-                if (tree[i].id === id) return tree.splice(i,1)[0];
-                if (tree[i].type === 'folder') {
-                    const removed = removeItemFromTree(tree[i].children, id);
-                    if (removed) return removed;
-                }
-            }
+            for (let i=0; i<tree.length; i++) { if (tree[i].id === id) return tree.splice(i,1)[0]; if (tree[i].type === 'folder') { const r = removeItemFromTree(tree[i].children, id); if (r) return r; } }
             return null;
         }
         function insertAfterInTree(tree, targetId, item) {
-            for (let i=0; i<tree.length; i++) {
-                if (tree[i].id === targetId) { tree.splice(i+1,0,item); return true; }
-                if (tree[i].type === 'folder' && insertAfterInTree(tree[i].children, targetId, item)) return true;
-            }
+            for (let i=0; i<tree.length; i++) { if (tree[i].id === targetId) { tree.splice(i+1,0,item); return true; } if (tree[i].type === 'folder' && insertAfterInTree(tree[i].children, targetId, item)) return true; }
             return false;
         }
-        function getAllModelsFromTree(tree) {
-            return tree.flatMap(item => item.type === 'model' ? [item] : (item.type === 'folder' ? getAllModelsFromTree(item.children) : []));
-        }
-        function getAllRangesFromTree(tree) {
-            return tree.flatMap(item => item.type === 'range' ? [item] : (item.type === 'folder' ? getAllRangesFromTree(item.children) : []));
-        }
+        function getAllModelsFromTree(tree) { return tree.flatMap(item => item.type === 'model' ? [item] : (item.type === 'folder' ? getAllModelsFromTree(item.children) : [])); }
+        function getAllRangesFromTree(tree) { return tree.flatMap(item => item.type === 'range' ? [item] : (item.type === 'folder' ? getAllRangesFromTree(item.children) : [])); }
         function getActiveRange() { return state.activeRangeId ? findItemInTreeById(state.tree, state.activeRangeId) : null; }
         function normalizeChartEntry(entries) {
             if (!entries || entries.length === 0) return [];
-            let filtered = entries.filter(e => e.pct > 0);
-            let sum = filtered.reduce((s,e) => s + e.pct, 0);
+            let filtered = entries.filter(e => e.pct > 0); let sum = filtered.reduce((s,e) => s + e.pct, 0);
             if (sum > 100) filtered = filtered.map(e => ({...e, pct: Math.round((e.pct/sum)*100)}));
             sum = filtered.reduce((s,e) => s + e.pct, 0);
             if (sum < 100 && filtered.length > 0) filtered.push({ brushId: BUILTIN_FOLD_ID, pct: 100 - sum });
             return filtered;
         }
         function getDominantBrushId(chart, hand) {
-            const entry = chart[hand];
-            if (!entry || entry.length === 0) return BUILTIN_FOLD_ID;
-            const norm = normalizeChartEntry(entry);
-            return norm.length === 0 ? BUILTIN_FOLD_ID : norm.reduce((a,b) => a.pct > b.pct ? a : b).brushId;
+            const entry = chart[hand]; if (!entry || entry.length === 0) return BUILTIN_FOLD_ID;
+            const norm = normalizeChartEntry(entry); if (norm.length === 0) return BUILTIN_FOLD_ID;
+            return norm.reduce((a,b) => a.pct > b.pct ? a : b).brushId;
         }
         function getBrushIdsFromRange(range) {
-            const set = new Set();
-            if (range.chart) Object.values(range.chart).forEach(arr => arr.forEach(e => set.add(e.brushId)));
-            if (set.size === 0) set.add(BUILTIN_FOLD_ID);
-            return set;
+            const set = new Set(); if (range.chart) Object.values(range.chart).forEach(arr => arr.forEach(e => set.add(e.brushId)));
+            if (set.size === 0) set.add(BUILTIN_FOLD_ID); return set;
         }
         function getMixedPatternsFromRange(range) {
-            const map = new Map();
-            if (!range.chart) return [];
+            const map = new Map(); if (!range.chart) return [];
             for (const [hand, entries] of Object.entries(range.chart)) {
-                const norm = normalizeChartEntry(entries);
-                if (norm.length <= 1) continue;
+                const norm = normalizeChartEntry(entries); if (norm.length <= 1) continue;
                 const key = norm.map(e => `${e.brushId}:${e.pct}`).join(',');
                 if (!map.has(key)) map.set(key, { entries: norm, key });
             }
@@ -434,28 +292,20 @@
         }
 
         function buildGrid() {
-            const grid = document.getElementById('grid-main');
-            grid.innerHTML = '';
-            cellElements.clear();
+            const grid = document.getElementById('grid-main'); grid.innerHTML = ''; cellElements.clear();
             for (let r=0; r<13; r++) {
                 const rowDiv = document.createElement('div'); rowDiv.className = 'grid-row-cells';
                 for (let c=0; c<13; c++) {
-                    const hand = getHandName(r,c);
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.hand = hand;
-                    cell.dataset.row = r; cell.dataset.col = c;
+                    const hand = getHandName(r,c); const cell = document.createElement('div'); cell.className = 'cell';
+                    cell.dataset.hand = hand; cell.dataset.row = r; cell.dataset.col = c;
                     const label = document.createElement('div'); label.className = 'cell-label'; label.textContent = hand;
                     cell.appendChild(label);
-                    cell.addEventListener('mousedown', onCellMouseDown);
-                    cell.addEventListener('mouseenter', onCellMouseEnter);
-                    rowDiv.appendChild(cell);
-                    cellElements.set(hand, cell);
+                    cell.addEventListener('mousedown', onCellMouseDown); cell.addEventListener('mouseenter', onCellMouseEnter);
+                    rowDiv.appendChild(cell); cellElements.set(hand, cell);
                 }
                 grid.appendChild(rowDiv);
             }
         }
-
         function updateCellDisplay(cell, hand, chart, train, hideTrainMarks) {
             cell.querySelectorAll('.stripe,.badge').forEach(el => el.remove());
             let label = cell.querySelector('.cell-label');
@@ -464,25 +314,20 @@
             const norm = chart?.[hand] ? normalizeChartEntry(chart[hand]) : [];
             if (norm.length === 0) {
                 const stripe = document.createElement('div'); stripe.className = 'stripe';
-                stripe.style.top = '0'; stripe.style.height = '100%'; stripe.style.background = DEFAULT_FOLD_COLOR;
-                cell.appendChild(stripe);
+                stripe.style.top = '0'; stripe.style.height = '100%'; stripe.style.background = DEFAULT_FOLD_COLOR; cell.appendChild(stripe);
             } else {
                 let top = 0;
                 norm.forEach(e => {
                     const stripe = document.createElement('div'); stripe.className = 'stripe';
                     stripe.style.top = top + '%'; stripe.style.height = e.pct + '%';
-                    stripe.style.background = getBrushById(e.brushId)?.color || DEFAULT_FOLD_COLOR;
-                    cell.appendChild(stripe);
-                    top += e.pct;
+                    stripe.style.background = getBrushById(e.brushId)?.color || DEFAULT_FOLD_COLOR; cell.appendChild(stripe); top += e.pct;
                 });
             }
             if (label) cell.appendChild(label);
         }
-
         function updateCellsForRange(rangeId, hideTrainMarks = false) {
             const range = rangeId ? findItemInTreeById(state.tree, rangeId) : null;
-            const chart = range?.chart || {};
-            const train = range?.train || {};
+            const chart = range?.chart || {}; const train = range?.train || {};
             cellElements.forEach((cell, hand) => updateCellDisplay(cell, hand, chart, train, hideTrainMarks));
         }
 
@@ -502,131 +347,83 @@
         }
         document.addEventListener('mouseup', () => { state.isDrawing = false; state.isShiftDrawing = false; });
 
-        function toggleTrainMark(hand) {
-            const r = getActiveRange(); if (!r) return;
-            r.train = r.train || {};
-            r.train[hand] = !r.train[hand];
-            saveData();
-            updateCellDisplay(cellElements.get(hand), hand, r.chart, r.train, false);
-        }
+        function toggleTrainMark(hand) { const r = getActiveRange(); if (r) { r.train = r.train || {}; r.train[hand] = !r.train[hand]; saveData(); updateCellDisplay(cellElements.get(hand), hand, r.chart, r.train, false); } }
         function toggleSelectionMark(hand) {
             const range = getActiveRange(); if (!range) return;
             const model = findItemInTreeById(state.selectionTree, state.activeSelectionModelId);
             if (!model || model.type !== 'model') return;
-            model.marks = model.marks || {};
-            model.marks[range.id] = model.marks[range.id] || {};
+            model.marks = model.marks || {}; model.marks[range.id] = model.marks[range.id] || {};
             model.marks[range.id][hand] = !model.marks[range.id][hand];
-            saveData();
-            updateSelectionGrid();
-            renderSelectionRangeTree();
+            saveData(); updateSelectionGrid(); renderSelectionRangeTree();
         }
         function applyBrushReplace(hand) {
             const range = getActiveRange(); if (!range) return;
             range.chart = range.chart || {};
-            const brushes = Array.from(state.selectedBrushes);
-            if (brushes.length === 0) brushes.push(BUILTIN_FOLD_ID);
-            const base = Math.floor(100 / brushes.length);
-            const rem = 100 - base * brushes.length;
+            const brushes = Array.from(state.selectedBrushes); if (brushes.length === 0) brushes.push(BUILTIN_FOLD_ID);
+            const base = Math.floor(100 / brushes.length); const rem = 100 - base * brushes.length;
             range.chart[hand] = brushes.map((id, i) => ({ brushId: id, pct: base + (i===0 ? rem : 0) }));
-            saveData();
-            updateCellDisplay(cellElements.get(hand), hand, range.chart, range.train, true);
+            saveData(); updateCellDisplay(cellElements.get(hand), hand, range.chart, range.train, true);
         }
-        function applyMemoryBrush(hand) {
-            state.memoryState.userChart[hand] = state.memoryState.selectedMemBrushId;
-            state.memoryState.checked = false;
-            renderMemoryCell(hand);
-        }
+        function applyMemoryBrush(hand) { state.memoryState.userChart[hand] = state.memoryState.selectedMemBrushId; state.memoryState.checked = false; renderMemoryCell(hand); }
         function renderMemoryCell(hand) {
             const cell = cellElements.get(hand); if (!cell) return;
             cell.querySelectorAll('.stripe,.badge').forEach(el => el.remove());
-            const brushId = state.memoryState.userChart[hand];
-            const color = brushId ? (getBrushById(brushId)?.color || '#2a2d35') : '#2a2d35';
+            const color = getBrushById(state.memoryState.userChart[hand])?.color || '#2a2d35';
             const stripe = document.createElement('div'); stripe.className = 'stripe';
-            stripe.style.top = '0'; stripe.style.height = '100%'; stripe.style.background = color;
-            cell.appendChild(stripe);
+            stripe.style.top = '0'; stripe.style.height = '100%'; stripe.style.background = color; cell.appendChild(stripe);
             let label = cell.querySelector('.cell-label'); if (label) cell.appendChild(label);
         }
 
-        function clearAllCellHighlights() {
-            document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-train-hand','memory-correct','memory-wrong'));
-        }
-        function highlightCellInTrain(hand) {
-            clearAllCellHighlights();
-            const cell = cellElements.get(hand);
-            if (cell) cell.classList.add('active-train-hand');
-        }
+        function clearAllCellHighlights() { document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-train-hand','memory-correct','memory-wrong')); }
+        function highlightCellInTrain(hand) { clearAllCellHighlights(); const cell = cellElements.get(hand); if (cell) cell.classList.add('active-train-hand'); }
 
         function renderBrushes() {
-            const container = document.getElementById('brush-list');
-            container.innerHTML = '';
+            const container = document.getElementById('brush-list'); container.innerHTML = '';
             state.brushes.forEach((brush, idx) => {
-                const chip = document.createElement('span'); chip.className = 'brush-chip';
-                chip.draggable = true; chip.dataset.brushIdx = idx; chip.dataset.brushId = brush.id;
+                const chip = document.createElement('span'); chip.className = 'brush-chip'; chip.draggable = true;
+                chip.dataset.brushIdx = idx; chip.dataset.brushId = brush.id;
                 if (state.selectedBrushes.has(brush.id)) chip.classList.add('selected');
                 chip.innerHTML = `<span class="swatch" style="background:${brush.color};"></span>${brush.name}`;
-                if (!brush.builtin) {
-                    const del = document.createElement('span'); del.className = 'del-brush'; del.textContent = '×';
-                    del.onclick = (e) => { e.stopPropagation(); deleteBrush(brush.id); };
-                    chip.appendChild(del);
-                }
-                chip.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', brush.id);
-                    chip.classList.add('dragging');
-                });
+                if (!brush.builtin) { const del = document.createElement('span'); del.className = 'del-brush'; del.textContent = '×'; del.onclick = (e) => { e.stopPropagation(); deleteBrush(brush.id); }; chip.appendChild(del); }
+                chip.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', brush.id); chip.classList.add('dragging'); });
                 chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
                 chip.addEventListener('dragover', (e) => e.preventDefault());
                 chip.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const draggedId = e.dataTransfer.getData('text/plain');
+                    e.preventDefault(); const draggedId = e.dataTransfer.getData('text/plain');
                     if (draggedId === brush.id) return;
                     const draggedIdx = state.brushes.findIndex(b => b.id === draggedId);
-                    if (draggedIdx !== -1) {
-                        const [moved] = state.brushes.splice(draggedIdx, 1);
-                        state.brushes.splice(idx, 0, moved);
-                        saveData(); renderBrushes();
-                    }
+                    if (draggedIdx !== -1) { const [moved] = state.brushes.splice(draggedIdx, 1); state.brushes.splice(idx, 0, moved); saveData(); renderBrushes(); }
                 });
                 chip.onclick = (e) => {
-                    if (e.ctrlKey || e.metaKey) {
-                        state.selectedBrushes.has(brush.id) ? state.selectedBrushes.delete(brush.id) : state.selectedBrushes.add(brush.id);
-                    } else {
-                        state.selectedBrushes.clear(); state.selectedBrushes.add(brush.id);
-                    }
+                    if (e.ctrlKey || e.metaKey) { state.selectedBrushes.has(brush.id) ? state.selectedBrushes.delete(brush.id) : state.selectedBrushes.add(brush.id); }
+                    else { state.selectedBrushes.clear(); state.selectedBrushes.add(brush.id); }
                     if (state.selectedBrushes.size === 0) state.selectedBrushes.add(BUILTIN_FOLD_ID);
                     renderBrushes();
                 };
                 container.appendChild(chip);
             });
         }
-
         function deleteBrush(id) {
             if (id === BUILTIN_FOLD_ID) return;
-            state.brushes = state.brushes.filter(b => b.id !== id);
-            state.selectedBrushes.delete(id);
+            state.brushes = state.brushes.filter(b => b.id !== id); state.selectedBrushes.delete(id);
             if (state.selectedBrushes.size === 0) state.selectedBrushes.add(BUILTIN_FOLD_ID);
             getAllRangesFromTree(state.tree).forEach(range => {
                 if (!range.chart) return;
                 for (const [hand, entries] of Object.entries(range.chart)) {
                     const filtered = entries.filter(e => e.brushId !== id);
-                    if (filtered.length === 0) delete range.chart[hand];
-                    else range.chart[hand] = filtered;
+                    if (filtered.length === 0) delete range.chart[hand]; else range.chart[hand] = filtered;
                 }
             });
             saveData(); renderBrushes(); updateCellsForRange(state.activeRangeId, true);
         }
-
-        function showAddBrushForm() {
-            document.getElementById('add-brush-form').style.display = 'flex';
-            document.getElementById('brush-name-input').value = document.getElementById('brush-type-select').value;
-        }
+        function showAddBrushForm() { document.getElementById('add-brush-form').style.display = 'flex'; document.getElementById('brush-name-input').value = document.getElementById('brush-type-select').value; }
         document.getElementById('btn-add-brush').onclick = showAddBrushForm;
         document.getElementById('cancel-brush').onclick = () => document.getElementById('add-brush-form').style.display = 'none';
         document.getElementById('brush-type-select').onchange = function() { document.getElementById('brush-name-input').value = this.value; };
         (function initColorPalette() {
             const palette = document.getElementById('color-palette');
             POPULAR_COLORS.forEach(color => {
-                const dot = document.createElement('span');
-                dot.style.width='24px'; dot.style.height='24px'; dot.style.background=color; dot.style.borderRadius='50%'; dot.style.cursor='pointer';
+                const dot = document.createElement('span'); dot.style.width='24px'; dot.style.height='24px'; dot.style.background=color; dot.style.borderRadius='50%'; dot.style.cursor='pointer';
                 dot.onclick = () => { document.getElementById('brush-color-input').value = color; palette.querySelectorAll('.active-dot').forEach(d=>d.classList.remove('active-dot')); dot.classList.add('active-dot'); };
                 palette.appendChild(dot);
             });
@@ -636,93 +433,58 @@
             let name = document.getElementById('brush-name-input').value.trim() || type;
             const color = document.getElementById('brush-color-input').value;
             const newBrush = { id: genId(), type, name, color, builtin: false };
-            state.brushes.push(newBrush);
-            state.selectedBrushes.clear(); state.selectedBrushes.add(newBrush.id);
-            saveData(); renderBrushes();
-            document.getElementById('add-brush-form').style.display = 'none';
+            state.brushes.push(newBrush); state.selectedBrushes.clear(); state.selectedBrushes.add(newBrush.id);
+            saveData(); renderBrushes(); document.getElementById('add-brush-form').style.display = 'none';
         };
 
-        function renderTree() {
-            const container = document.getElementById('tree-container');
-            container.innerHTML = '';
-            renderTreeItems(state.tree, container, 0, true);
-        }
-        function renderMemoryTree() {
-            const container = document.getElementById('memory-tree-container');
-            container.innerHTML = '';
-            renderTreeItems(state.tree, container, 0, false);
-        }
+        function renderTree() { const container = document.getElementById('tree-container'); container.innerHTML = ''; renderTreeItems(state.tree, container, 0, true); }
+        function renderMemoryTree() { const container = document.getElementById('memory-tree-container'); container.innerHTML = ''; renderTreeItems(state.tree, container, 0, false); }
         function renderTreeItems(items, container, depth, isEditor, selectionModel = null) {
             items.forEach(item => {
-                const div = document.createElement('div'); div.className = 'tree-item';
-                div.style.paddingLeft = (depth * 14 + 6) + 'px';
+                const div = document.createElement('div'); div.className = 'tree-item'; div.style.paddingLeft = (depth * 14 + 6) + 'px';
                 if (isEditor && !selectionModel) { div.draggable = true; div.dataset.treeId = item.id; }
                 const icon = item.type === 'folder' ? (item.expanded ? '📂' : '📁') : '📄';
                 div.innerHTML = `<span>${icon}</span> <span class="tree-name">${item.name}</span>`;
-                
                 if (isEditor && item.id === state.activeTreeElementId) div.classList.add('active-tree');
                 if (!isEditor && item.type === 'range' && item.id === state.activeRangeId) div.classList.add('active-tree');
                 if (selectionModel && item.type === 'range' && item.id === state.activeRangeId) div.classList.add('active-tree');
-
                 if (selectionModel) {
-                    const cb = document.createElement('input'); cb.type = 'checkbox';
-                    cb.style.marginLeft = 'auto';
+                    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.style.marginLeft = 'auto';
                     const ranges = item.type === 'folder' ? getAllRangesFromTree(item.children) : [item];
-                    const marks = selectionModel.marks || {};
-                    let allMarked = true, noneMarked = true;
+                    const marks = selectionModel.marks || {}; let allMarked = true, noneMarked = true;
                     ranges.forEach(r => {
-                        const handMarks = marks[r.id] || {};
-                        const allHands = getAllHands();
+                        const handMarks = marks[r.id] || {}; const allHands = getAllHands();
                         const markedCount = allHands.filter(h => handMarks[h]).length;
-                        if (markedCount === 0) allMarked = false;
-                        else noneMarked = false;
+                        if (markedCount === 0) allMarked = false; else noneMarked = false;
                         if (markedCount > 0 && markedCount < allHands.length) { allMarked = false; noneMarked = false; }
                     });
-                    cb.checked = allMarked && !noneMarked;
-                    cb.indeterminate = !allMarked && !noneMarked;
+                    cb.checked = allMarked && !noneMarked; cb.indeterminate = !allMarked && !noneMarked;
                     cb.onclick = (e) => { e.stopPropagation(); setModelMarkForItem(selectionModel, item, cb.checked); };
                     div.appendChild(cb);
                 }
-
                 if (isEditor && !selectionModel && item.type === 'range') {
                     const scenarioBtn = document.createElement('button'); scenarioBtn.textContent='⚙️'; scenarioBtn.style.marginLeft='auto';
-                    scenarioBtn.onclick = (e) => { e.stopPropagation(); openScenarioModal(item); };
-                    div.appendChild(scenarioBtn);
+                    scenarioBtn.onclick = (e) => { e.stopPropagation(); openScenarioModal(item); }; div.appendChild(scenarioBtn);
                 }
                 if (isEditor && !selectionModel) {
                     const actions = document.createElement('span'); actions.className='tree-actions';
-                    if (item.type === 'range') {
-                        const copyBtn = document.createElement('button'); copyBtn.textContent='📋'; copyBtn.onclick=(e)=>{e.stopPropagation(); copyRange(item.id);};
-                        actions.appendChild(copyBtn);
-                    }
-                    const delBtn = document.createElement('button'); delBtn.textContent='🗑️'; delBtn.onclick=(e)=>{e.stopPropagation(); deleteTreeItem(item.id);};
-                    actions.appendChild(delBtn);
+                    if (item.type === 'range') { const copyBtn = document.createElement('button'); copyBtn.textContent='📋'; copyBtn.onclick=(e)=>{e.stopPropagation(); copyRange(item.id);}; actions.appendChild(copyBtn); }
+                    const delBtn = document.createElement('button'); delBtn.textContent='🗑️'; delBtn.onclick=(e)=>{e.stopPropagation(); deleteTreeItem(item.id);}; actions.appendChild(delBtn);
                     div.appendChild(actions);
                 }
-
                 div.onclick = (e) => {
                     if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
                     if (selectionModel) {
                         if (item.type === 'range') { state.activeRangeId = item.id; updateSelectionGrid(); renderSelectionRangeTree(); }
-                        else if (item.type === 'folder') {
-                            state.selectionExpandedFolders.has(item.id) ? state.selectionExpandedFolders.delete(item.id) : state.selectionExpandedFolders.add(item.id);
-                            renderSelectionRangeTree();
-                            return;
-                        }
+                        else if (item.type === 'folder') { state.selectionExpandedFolders.has(item.id) ? state.selectionExpandedFolders.delete(item.id) : state.selectionExpandedFolders.add(item.id); renderSelectionRangeTree(); return; }
                     } else {
                         if (isEditor) state.activeTreeElementId = item.id;
                         if (item.type === 'range') {
                             state.activeRangeId = item.id;
                             if (state.mode === 'editor') updateCellsForRange(item.id, true);
                             else if (state.mode === 'memory') { state.memoryState.userChart = {}; state.memoryState.checked = false; updateMemoryBrushButtons(item); setAllCellsNeutral(); }
-                        } else if (item.type === 'folder') {
-                            item.expanded = !item.expanded; saveData();
-                            if (state.mode === 'memory') renderMemoryTree();
-                            else renderTree();
-                            return;
-                        }
-                        if (state.mode === 'memory') renderMemoryTree();
-                        else if (state.mode === 'editor') renderTree();
+                        } else if (item.type === 'folder') { item.expanded = !item.expanded; saveData(); if (state.mode==='memory') renderMemoryTree(); else renderTree(); return; }
+                        if (state.mode==='memory') renderMemoryTree(); else if (state.mode==='editor') renderTree();
                     }
                 };
                 div.ondblclick = (e) => { if(isEditor && !selectionModel) startRename(item); };
@@ -730,11 +492,7 @@
                     div.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({id:item.id})); });
                     div.addEventListener('dragover', (e) => { e.preventDefault(); const rect = div.getBoundingClientRect(); const y = e.clientY - rect.top; div.dataset.dropPosition = y < rect.height*0.25 ? 'before' : (y > rect.height*0.75 ? 'after' : 'inside'); });
                     div.addEventListener('dragleave', () => { div.dataset.dropPosition = ''; });
-                    div.addEventListener('drop', (e) => {
-                        e.preventDefault(); const data = JSON.parse(e.dataTransfer.getData('text/plain')); const pos = div.dataset.dropPosition;
-                        if (data.id !== item.id) handleTreeDrop(data.id, item.id, pos);
-                        div.dataset.dropPosition = '';
-                    });
+                    div.addEventListener('drop', (e) => { e.preventDefault(); const data = JSON.parse(e.dataTransfer.getData('text/plain')); const pos = div.dataset.dropPosition; if (data.id !== item.id) handleTreeDrop(data.id, item.id, pos); div.dataset.dropPosition = ''; });
                 }
                 container.appendChild(div);
                 if (item.type === 'folder' && (selectionModel ? state.selectionExpandedFolders.has(item.id) : item.expanded)) {
@@ -742,74 +500,39 @@
                 }
             });
         }
-
         function setModelMarkForItem(model, item, checked) {
-            if (item.type === 'range') {
-                model.marks = model.marks || {};
-                if (checked) {
-                    const allHands = getAllHands();
-                    model.marks[item.id] = {};
-                    allHands.forEach(h => model.marks[item.id][h] = true);
-                } else delete model.marks[item.id];
-            } else if (item.type === 'folder') {
-                getAllRangesFromTree(item.children).forEach(r => setModelMarkForItem(model, r, checked));
-            }
+            if (item.type === 'range') { model.marks = model.marks || {}; if (checked) { const all = getAllHands(); model.marks[item.id] = {}; all.forEach(h => model.marks[item.id][h] = true); } else delete model.marks[item.id]; }
+            else if (item.type === 'folder') getAllRangesFromTree(item.children).forEach(r => setModelMarkForItem(model, r, checked));
             saveData(); updateSelectionGrid(); renderSelectionRangeTree();
         }
-
         function startRename(item) {
-            const treeItem = document.querySelector(`[data-tree-id="${item.id}"]`);
-            if (!treeItem) return;
-            const nameSpan = treeItem.querySelector('.tree-name');
-            const input = document.createElement('input'); input.value = item.name; input.style.width = '100px';
+            const treeItem = document.querySelector(`[data-tree-id="${item.id}"]`); if (!treeItem) return;
+            const nameSpan = treeItem.querySelector('.tree-name'); const input = document.createElement('input'); input.value = item.name; input.style.width = '100px';
             nameSpan.replaceWith(input); input.focus(); input.select();
             const finish = (save) => { const newName = input.value.trim(); if (save && newName) { item.name = newName; saveData(); } renderTree(); };
-            input.addEventListener('blur', () => finish(true));
-            input.addEventListener('keydown', (e) => { if (e.key==='Enter') finish(true); if (e.key==='Escape') finish(false); });
+            input.addEventListener('blur', () => finish(true)); input.addEventListener('keydown', (e) => { if (e.key==='Enter') finish(true); if (e.key==='Escape') finish(false); });
         }
         function handleTreeDrop(dragId, targetId, position) {
-            const dragItem = removeItemFromTree(state.tree, dragId);
-            if (!dragItem) return;
+            const dragItem = removeItemFromTree(state.tree, dragId); if (!dragItem) return;
             const targetItem = findItemInTreeById(state.tree, targetId);
             if (!targetItem) { state.tree.push(dragItem); saveData(); renderTree(); return; }
-            if (position === 'inside' && targetItem.type === 'folder') {
-                if (isDescendant(state.tree, dragId, targetId)) return;
-                targetItem.children.push(dragItem); targetItem.expanded = true;
-            } else {
-                const parentArray = findParentArray(state.tree, targetId) || state.tree;
-                const idx = parentArray.findIndex(i => i.id === targetId);
-                if (position === 'before') parentArray.splice(idx, 0, dragItem);
-                else parentArray.splice(idx+1, 0, dragItem);
-            }
+            if (position === 'inside' && targetItem.type === 'folder') { if (isDescendant(state.tree, dragId, targetId)) return; targetItem.children.push(dragItem); targetItem.expanded = true; }
+            else { const parentArray = findParentArray(state.tree, targetId) || state.tree; const idx = parentArray.findIndex(i => i.id === targetId); if (position === 'before') parentArray.splice(idx, 0, dragItem); else parentArray.splice(idx+1, 0, dragItem); }
             saveData(); renderTree();
         }
         function copyRange(id) {
-            const range = findItemInTreeById(state.tree, id);
-            if (!range) return;
-            const copy = JSON.parse(JSON.stringify(range));
-            copy.id = genId(); copy.name += ' (копия)';
-            insertAfterInTree(state.tree, id, copy);
-            saveData(); renderTree();
+            const range = findItemInTreeById(state.tree, id); if (!range) return;
+            const copy = JSON.parse(JSON.stringify(range)); copy.id = genId(); copy.name += ' (копия)';
+            insertAfterInTree(state.tree, id, copy); saveData(); renderTree();
         }
         async function deleteTreeItem(id) {
-            if (!await customConfirm('Удалить элемент?')) return;
-            removeItemFromTree(state.tree, id);
-            if (state.activeRangeId === id) state.activeRangeId = null;
+            if (!await customConfirm('Удалить?')) return;
+            removeItemFromTree(state.tree, id); if (state.activeRangeId === id) state.activeRangeId = null;
             if (state.activeTreeElementId === id) state.activeTreeElementId = null;
             saveData(); renderTree(); updateCellsForRange(null, true);
         }
-        function addFolder() {
-            const folder = { id: genId(), type: 'folder', name: 'Новая папка', expanded: true, children: [] };
-            state.tree.push(folder);
-            state.activeTreeElementId = folder.id;
-            saveData(); renderTree();
-        }
-        function addRange() {
-            const range = { id: genId(), type: 'range', name: 'Новый диапазон', chart: {}, train: {}, scenario: { position:'BTN', players:6, effectiveStack:100, actionBefore:'none', raiseSize:2.5 } };
-            state.tree.push(range);
-            state.activeRangeId = range.id; state.activeTreeElementId = range.id;
-            saveData(); renderTree(); updateCellsForRange(range.id, true);
-        }
+        function addFolder() { const folder = { id: genId(), type: 'folder', name: 'Новая папка', expanded: true, children: [] }; state.tree.push(folder); state.activeTreeElementId = folder.id; saveData(); renderTree(); }
+        function addRange() { const range = { id: genId(), type: 'range', name: 'Новый диапазон', chart: {}, train: {}, scenario: { position:'BTN', players:6, effectiveStack:100, actionBefore:'none', raiseSize:2.5 } }; state.tree.push(range); state.activeRangeId = range.id; state.activeTreeElementId = range.id; saveData(); renderTree(); updateCellsForRange(range.id, true); }
 
         let scenarioEditingRangeId = null;
         function openScenarioModal(item) {
@@ -823,32 +546,18 @@
             document.getElementById('scenario-raise-size').value = s.raiseSize;
             toggleRaiseSizeInput();
         }
-        function toggleRaiseSizeInput() {
-            const action = document.getElementById('scenario-action').value;
-            document.getElementById('scenario-raise-size-container').style.display = ['raise','3bet','allin','limp'].includes(action) ? 'block' : 'none';
-        }
+        function toggleRaiseSizeInput() { document.getElementById('scenario-raise-size-container').style.display = ['raise','3bet','allin','limp'].includes(document.getElementById('scenario-action').value) ? 'block' : 'none'; }
         document.getElementById('scenario-action').onchange = toggleRaiseSizeInput;
         document.getElementById('save-scenario').onclick = () => {
             const range = findItemInTreeById(state.tree, scenarioEditingRangeId);
-            if (range) {
-                range.scenario = {
-                    position: document.getElementById('scenario-position').value,
-                    players: +document.getElementById('scenario-players').value,
-                    effectiveStack: +document.getElementById('scenario-stack').value,
-                    actionBefore: document.getElementById('scenario-action').value,
-                    raiseSize: +document.getElementById('scenario-raise-size').value
-                };
-                saveData();
-            }
+            if (range) { range.scenario = { position: document.getElementById('scenario-position').value, players: +document.getElementById('scenario-players').value, effectiveStack: +document.getElementById('scenario-stack').value, actionBefore: document.getElementById('scenario-action').value, raiseSize: +document.getElementById('scenario-raise-size').value }; saveData(); }
             document.getElementById('scenario-modal').style.display = 'none';
         };
         document.getElementById('cancel-scenario').onclick = () => document.getElementById('scenario-modal').style.display = 'none';
 
         function setMode(mode) {
-            clearTimeout(state.trainState.timeoutId);
-            stopTimer();
-            state.mode = mode;
-            state.isDrawing = false; state.isShiftDrawing = false;
+            clearTimeout(state.trainState.timeoutId); stopTimer();
+            state.mode = mode; state.isDrawing = false; state.isShiftDrawing = false;
             document.getElementById('section-editor-brushes').style.display = mode==='editor'?'block':'none';
             document.getElementById('section-editor-tree').style.display = mode==='editor'?'block':'none';
             document.getElementById('section-selection').style.display = mode==='selection'?'block':'none';
@@ -871,171 +580,102 @@
                 cell.querySelectorAll('.stripe,.badge').forEach(el => el.remove());
                 const stripe = document.createElement('div'); stripe.className = 'stripe';
                 stripe.style.top='0'; stripe.style.height='100%'; stripe.style.background='#2a2d35';
-                cell.appendChild(stripe);
-                let label = cell.querySelector('.cell-label'); if(label) cell.appendChild(label);
+                cell.appendChild(stripe); let label = cell.querySelector('.cell-label'); if(label) cell.appendChild(label);
             });
         }
-
         function updateSelectionGrid() {
-            const range = getActiveRange();
-            const model = findItemInTreeById(state.selectionTree, state.activeSelectionModelId);
+            const range = getActiveRange(); const model = findItemInTreeById(state.selectionTree, state.activeSelectionModelId);
             cellElements.forEach((cell, hand) => {
                 updateCellDisplay(cell, hand, range?.chart || {}, {}, true);
-                if (model && model.type === 'model' && range && model.marks?.[range.id]?.[hand]) {
-                    cell.classList.add('train-marked');
-                } else {
-                    cell.classList.remove('train-marked');
-                }
+                if (model && model.type === 'model' && range && model.marks?.[range.id]?.[hand]) cell.classList.add('train-marked');
+                else cell.classList.remove('train-marked');
             });
         }
-
-        function renderSelectionModelTree() {
-            const container = document.getElementById('selection-model-tree-container');
-            container.innerHTML = '';
-            renderSelectionModelTreeItems(state.selectionTree, container, 0);
-        }
+        function renderSelectionModelTree() { const container = document.getElementById('selection-model-tree-container'); container.innerHTML = ''; renderSelectionModelTreeItems(state.selectionTree, container, 0); }
         function renderSelectionModelTreeItems(items, container, depth) {
             items.forEach(item => {
-                const div = document.createElement('div'); div.className = 'tree-item';
-                div.style.paddingLeft = (depth * 14 + 6) + 'px';
-                div.draggable = true;
-                div.dataset.selectionId = item.id;
+                const div = document.createElement('div'); div.className = 'tree-item'; div.style.paddingLeft = (depth * 14 + 6) + 'px';
+                div.draggable = true; div.dataset.selectionId = item.id;
                 const icon = item.type === 'folder' ? (state.selectionExpandedFolders.has(item.id) ? '📂' : '📁') : '📋';
                 div.innerHTML = `<span>${icon}</span> <span class="tree-name">${item.name}</span>`;
                 if (item.id === state.activeSelectionModelId && item.type === 'model') div.classList.add('active-tree');
-
                 const actions = document.createElement('span'); actions.className = 'tree-actions';
-                if (item.type === 'model') {
-                    const copyBtn = document.createElement('button'); copyBtn.textContent='📋'; copyBtn.onclick=(e)=>{e.stopPropagation(); copySelectionModel(item.id);};
-                    actions.appendChild(copyBtn);
-                }
-                const delBtn = document.createElement('button'); delBtn.textContent='🗑️'; delBtn.onclick=(e)=>{e.stopPropagation(); deleteSelectionItem(item.id);};
-                actions.appendChild(delBtn);
+                if (item.type === 'model') { const copyBtn = document.createElement('button'); copyBtn.textContent='📋'; copyBtn.onclick=(e)=>{e.stopPropagation(); copySelectionModel(item.id);}; actions.appendChild(copyBtn); }
+                const delBtn = document.createElement('button'); delBtn.textContent='🗑️'; delBtn.onclick=(e)=>{e.stopPropagation(); deleteSelectionItem(item.id);}; actions.appendChild(delBtn);
                 div.appendChild(actions);
-
                 let clickTimeout = null;
                 div.onclick = (e) => {
                     if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
                     if (clickTimeout) { clearTimeout(clickTimeout); clickTimeout = null; return; }
                     clickTimeout = setTimeout(() => {
                         clickTimeout = null;
-                        if (item.type === 'model') {
-                            state.activeSelectionModelId = item.id;
-                            saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid();
-                        } else if (item.type === 'folder') {
-                            state.selectionExpandedFolders.has(item.id) ? state.selectionExpandedFolders.delete(item.id) : state.selectionExpandedFolders.add(item.id);
-                            renderSelectionModelTree();
-                        }
+                        if (item.type === 'model') { state.activeSelectionModelId = item.id; saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid(); }
+                        else if (item.type === 'folder') { state.selectionExpandedFolders.has(item.id) ? state.selectionExpandedFolders.delete(item.id) : state.selectionExpandedFolders.add(item.id); renderSelectionModelTree(); }
                     }, 250);
                 };
                 div.ondblclick = (e) => {
                     clearTimeout(clickTimeout); clickTimeout = null;
-                    const nameSpan = div.querySelector('.tree-name');
-                    const input = document.createElement('input'); input.value = item.name; input.style.width = '80px';
+                    const nameSpan = div.querySelector('.tree-name'); const input = document.createElement('input'); input.value = item.name; input.style.width = '80px';
                     nameSpan.replaceWith(input); input.focus(); input.select();
                     const finish = () => { const newName = input.value.trim(); if (newName) item.name = newName; saveData(); renderSelectionModelTree(); };
-                    input.addEventListener('blur', finish);
-                    input.addEventListener('keydown', (ev) => { if (ev.key==='Enter') finish(); if (ev.key==='Escape') { input.value = item.name; finish(); } });
+                    input.addEventListener('blur', finish); input.addEventListener('keydown', (ev) => { if (ev.key==='Enter') finish(); if (ev.key==='Escape') { input.value = item.name; finish(); } });
                 };
-
                 div.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({id:item.id})); });
                 div.addEventListener('dragover', (e) => { e.preventDefault(); const rect = div.getBoundingClientRect(); const y = e.clientY - rect.top; div.dataset.dropPosition = y < rect.height*0.25 ? 'before' : (y > rect.height*0.75 ? 'after' : 'inside'); });
                 div.addEventListener('dragleave', () => { div.dataset.dropPosition = ''; });
-                div.addEventListener('drop', (e) => {
-                    e.preventDefault(); const data = JSON.parse(e.dataTransfer.getData('text/plain')); const pos = div.dataset.dropPosition;
-                    if (data.id !== item.id) handleSelectionDrop(data.id, item.id, pos);
-                    div.dataset.dropPosition = '';
-                });
+                div.addEventListener('drop', (e) => { e.preventDefault(); const data = JSON.parse(e.dataTransfer.getData('text/plain')); const pos = div.dataset.dropPosition; if (data.id !== item.id) handleSelectionDrop(data.id, item.id, pos); div.dataset.dropPosition = ''; });
                 container.appendChild(div);
                 if (item.type === 'folder' && state.selectionExpandedFolders.has(item.id)) renderSelectionModelTreeItems(item.children, container, depth+1);
             });
         }
         function renderSelectionRangeTree() {
-            const container = document.getElementById('selection-range-tree-container');
-            container.innerHTML = '';
+            const container = document.getElementById('selection-range-tree-container'); container.innerHTML = '';
             const model = findItemInTreeById(state.selectionTree, state.activeSelectionModelId);
-            if (model && model.type === 'model') {
-                renderTreeItems(state.tree, container, 0, false, model);
-            } else {
-                container.innerHTML = '<p style="color:#888;">Выберите модель, чтобы увидеть диапазоны</p>';
-            }
+            if (model && model.type === 'model') renderTreeItems(state.tree, container, 0, false, model);
+            else container.innerHTML = '<p style="color:#888;">Выберите модель</p>';
         }
-
         function handleSelectionDrop(dragId, targetId, position) {
-            const dragItem = removeItemFromTree(state.selectionTree, dragId);
-            if (!dragItem) return;
+            const dragItem = removeItemFromTree(state.selectionTree, dragId); if (!dragItem) return;
             const targetItem = findItemInTreeById(state.selectionTree, targetId);
             if (!targetItem) { state.selectionTree.push(dragItem); saveData(); renderSelectionModelTree(); return; }
-            if (position === 'inside' && targetItem.type === 'folder') {
-                if (isDescendant(state.selectionTree, dragId, targetId)) return;
-                targetItem.children.push(dragItem);
-                state.selectionExpandedFolders.add(targetItem.id);
-            } else {
-                const parentArray = findParentArray(state.selectionTree, targetId) || state.selectionTree;
-                const idx = parentArray.findIndex(i => i.id === targetId);
-                if (position === 'before') parentArray.splice(idx, 0, dragItem);
-                else parentArray.splice(idx+1, 0, dragItem);
-            }
+            if (position === 'inside' && targetItem.type === 'folder') { if (isDescendant(state.selectionTree, dragId, targetId)) return; targetItem.children.push(dragItem); state.selectionExpandedFolders.add(targetItem.id); }
+            else { const parentArray = findParentArray(state.selectionTree, targetId) || state.selectionTree; const idx = parentArray.findIndex(i => i.id === targetId); if (position === 'before') parentArray.splice(idx, 0, dragItem); else parentArray.splice(idx+1, 0, dragItem); }
             saveData(); renderSelectionModelTree();
         }
         function copySelectionModel(id) {
-            const model = findItemInTreeById(state.selectionTree, id);
-            if (!model || model.type !== 'model') return;
-            const copy = JSON.parse(JSON.stringify(model));
-            copy.id = genId(); copy.name += ' (копия)';
-            insertAfterInTree(state.selectionTree, id, copy);
-            state.activeSelectionModelId = copy.id;
+            const model = findItemInTreeById(state.selectionTree, id); if (!model || model.type !== 'model') return;
+            const copy = JSON.parse(JSON.stringify(model)); copy.id = genId(); copy.name += ' (копия)';
+            insertAfterInTree(state.selectionTree, id, copy); state.activeSelectionModelId = copy.id;
             saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid();
         }
         async function deleteSelectionItem(id) {
-            if (!await customConfirm('Удалить элемент?')) return;
-            removeItemFromTree(state.selectionTree, id);
-            if (state.activeSelectionModelId === id) state.activeSelectionModelId = null;
+            if (!await customConfirm('Удалить?')) return;
+            removeItemFromTree(state.selectionTree, id); if (state.activeSelectionModelId === id) state.activeSelectionModelId = null;
             saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid();
         }
-        document.getElementById('btn-add-selection-folder').onclick = () => {
-            const folder = { id: genId(), type: 'folder', name: 'Новая папка', expanded: true, children: [] };
-            state.selectionTree.push(folder);
-            state.selectionExpandedFolders.add(folder.id);
-            saveData(); renderSelectionModelTree();
-        };
-        document.getElementById('btn-add-selection-model').onclick = () => {
-            const model = { id: genId(), type: 'model', name: `Модель ${getAllModelsFromTree(state.selectionTree).length+1}`, marks: {} };
-            state.selectionTree.push(model);
-            state.activeSelectionModelId = model.id;
-            saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid();
-        };
+        document.getElementById('btn-add-selection-folder').onclick = () => { const folder = { id: genId(), type: 'folder', name: 'Новая папка', expanded: true, children: [] }; state.selectionTree.push(folder); state.selectionExpandedFolders.add(folder.id); saveData(); renderSelectionModelTree(); };
+        document.getElementById('btn-add-selection-model').onclick = () => { const model = { id: genId(), type: 'model', name: `Модель ${getAllModelsFromTree(state.selectionTree).length+1}`, marks: {} }; state.selectionTree.push(model); state.activeSelectionModelId = model.id; saveData(); renderSelectionModelTree(); renderSelectionRangeTree(); updateSelectionGrid(); };
 
         function getAllTrainHandsWithRange() {
             const ranges = getAllRangesFromTree(state.tree);
             const model = findItemInTreeById(state.selectionTree, state.activeSelectionModelId);
             if (model && model.type === 'model') {
                 const hands = [];
-                ranges.forEach(range => {
-                    const marks = model.marks?.[range.id] || {};
-                    Object.keys(marks).filter(h => marks[h]).forEach(h => hands.push({hand:h, rangeId:range.id, scenario:range.scenario}));
-                });
+                ranges.forEach(range => { const marks = model.marks?.[range.id] || {}; Object.keys(marks).filter(h => marks[h]).forEach(h => hands.push({hand:h, rangeId:range.id, scenario:range.scenario})); });
                 return hands;
             } else {
                 const hands = [];
-                ranges.forEach(range => {
-                    if (range.train) Object.keys(range.train).filter(h => range.train[h]).forEach(h => hands.push({hand:h, rangeId:range.id, scenario:range.scenario}));
-                });
+                ranges.forEach(range => { if (range.train) Object.keys(range.train).filter(h => range.train[h]).forEach(h => hands.push({hand:h, rangeId:range.id, scenario:range.scenario})); });
                 return hands;
             }
         }
-        function updateTrainScore() {
-            document.getElementById('train-score').textContent = `✅ ${state.trainCounts.correct} / ❌ ${state.trainCounts.wrong}`;
-        }
+        function updateTrainScore() { document.getElementById('train-score').textContent = `✅ ${state.trainCounts.correct} / ❌ ${state.trainCounts.wrong}`; }
         function startTraining() {
             clearTimeout(state.trainState.timeoutId);
             document.querySelectorAll('.cell').forEach(c => c.classList.remove('train-marked'));
             state.trainState.answered = false; state.trainState.feedback = '';
             const handsList = getAllTrainHandsWithRange();
-            if (handsList.length === 0) {
-                document.getElementById('train-feedback').textContent = 'Нет отмеченных рук';
-                return;
-            }
+            if (handsList.length === 0) { document.getElementById('train-feedback').textContent = 'Нет отмеченных рук'; return; }
             const pick = handsList[Math.floor(Math.random() * handsList.length)];
             state.trainState.currentHand = pick.hand; state.trainState.currentRangeId = pick.rangeId;
             const range = findItemInTreeById(state.tree, pick.rangeId);
@@ -1043,52 +683,33 @@
             document.getElementById('train-hand-center').textContent = pick.hand;
             document.getElementById('train-stack-center').textContent = pick.scenario?.effectiveStack ? `Стек: ${pick.scenario.effectiveStack}bb` : '';
             updatePokerTable(pick.scenario);
-            if (state.trainState.showGrid) {
-                document.getElementById('grid-wrapper').classList.remove('invisible');
-                updateCellsForRange(pick.rangeId, true);
-                highlightCellInTrain(pick.hand);
-            } else {
-                document.getElementById('grid-wrapper').classList.add('invisible');
-            }
+            if (state.trainState.showGrid) { document.getElementById('grid-wrapper').classList.remove('invisible'); updateCellsForRange(pick.rangeId, true); highlightCellInTrain(pick.hand); }
+            else { document.getElementById('grid-wrapper').classList.add('invisible'); }
             renderTrainAnswerButtons(pick.rangeId);
             document.getElementById('train-feedback').textContent = '';
             updateTrainScore();
         }
         function renderTrainAnswerButtons(rangeId) {
-            const container = document.getElementById('train-answer-buttons');
-            container.innerHTML = '';
-            const range = findItemInTreeById(state.tree, rangeId);
-            if (!range) return;
+            const container = document.getElementById('train-answer-buttons'); container.innerHTML = '';
+            const range = findItemInTreeById(state.tree, rangeId); if (!range) return;
             getBrushIdsFromRange(range).forEach(id => {
-                const brush = getBrushById(id);
-                const btn = document.createElement('button');
-                btn.style.background = brush?.color || DEFAULT_FOLD_COLOR;
-                btn.textContent = brush?.name || id;
-                btn.onclick = () => handleTrainingAnswer(id);
-                container.appendChild(btn);
+                const brush = getBrushById(id); const btn = document.createElement('button');
+                btn.style.background = brush?.color || DEFAULT_FOLD_COLOR; btn.textContent = brush?.name || id;
+                btn.onclick = () => handleTrainingAnswer(id); container.appendChild(btn);
             });
             getMixedPatternsFromRange(range).forEach((mix, idx) => {
                 const btn = document.createElement('div'); btn.className = 'mixture-btn'; btn.style.width = '100px';
-                mix.entries.forEach(e => {
-                    const stripe = document.createElement('div'); stripe.className = 'mixture-stripe';
-                    stripe.style.width = e.pct + '%'; stripe.style.background = getBrushById(e.brushId)?.color || DEFAULT_FOLD_COLOR;
-                    btn.appendChild(stripe);
-                });
-                const label = document.createElement('div'); label.className = 'mixture-label';
-                label.textContent = mix.entries.map(e => getBrushById(e.brushId)?.name).join('/');
-                btn.appendChild(label);
-                btn.dataset.patternKey = mix.key;
-                btn.onclick = () => handleTrainingAnswer('mixture_' + idx, mix.key);
-                container.appendChild(btn);
+                mix.entries.forEach(e => { const s = document.createElement('div'); s.className = 'mixture-stripe'; s.style.width = e.pct+'%'; s.style.background = getBrushById(e.brushId)?.color || DEFAULT_FOLD_COLOR; btn.appendChild(s); });
+                const label = document.createElement('div'); label.className = 'mixture-label'; label.textContent = mix.entries.map(e => getBrushById(e.brushId)?.name).join('/');
+                btn.appendChild(label); btn.dataset.patternKey = mix.key;
+                btn.onclick = () => handleTrainingAnswer('mixture_'+idx, mix.key); container.appendChild(btn);
             });
         }
         function handleTrainingAnswer(answerBrushId, patternKey = null) {
             if (state.trainState.answered || !state.trainState.currentHand) return;
-            const range = findItemInTreeById(state.tree, state.trainState.currentRangeId);
-            if (!range) return;
+            const range = findItemInTreeById(state.tree, state.trainState.currentRangeId); if (!range) return;
             const hand = state.trainState.currentHand;
-            const chartEntries = range.chart?.[hand] || [];
-            const norm = normalizeChartEntry(chartEntries);
+            const chartEntries = range.chart?.[hand] || []; const norm = normalizeChartEntry(chartEntries);
             let correctId = null, correctMix = null;
             if (norm.length === 0) correctId = BUILTIN_FOLD_ID;
             else if (norm.length === 1) correctId = norm[0].brushId;
@@ -1097,62 +718,33 @@
             if (correctMix) correct = (typeof answerBrushId === 'string' && answerBrushId.startsWith('mixture_') && patternKey === correctMix);
             else correct = (answerBrushId === correctId);
             state.trainState.answered = true;
-            if (correct) {
-                state.trainCounts.correct++;
-                state.trainState.feedback = '✅ Верно!';
-            } else {
-                state.trainCounts.wrong++;
-                let correctText = correctMix ? (getMixedPatternsFromRange(range).find(m => m.key === correctMix)?.entries.map(e => getBrushById(e.brushId)?.name).join('/') || 'смесь') : getBrushById(correctId)?.name || correctId;
-                state.trainState.feedback = `❌ Неверно. Правильно: ${correctText}`;
-            }
+            if (correct) { state.trainCounts.correct++; state.trainState.feedback = '✅ Верно!'; }
+            else { state.trainCounts.wrong++; let correctText = correctMix ? (getMixedPatternsFromRange(range).find(m => m.key === correctMix)?.entries.map(e => getBrushById(e.brushId)?.name).join('/') || 'смесь') : getBrushById(correctId)?.name || correctId; state.trainState.feedback = `❌ Неверно. Правильно: ${correctText}`; }
             document.getElementById('train-feedback').textContent = state.trainState.feedback;
-            state.statistics.train.push({
-                hand, answer: answerBrushId, correct,
-                correctType: correctMix ? 'mixture' : 'single',
-                timestamp: Date.now(), rangeId: range.id, modelId: state.activeSelectionModelId
-            });
+            state.statistics.train.push({ hand, answer: answerBrushId, correct, correctType: correctMix ? 'mixture' : 'single', timestamp: Date.now(), rangeId: range.id, modelId: state.activeSelectionModelId });
             saveData(); updateTrainScore();
             state.trainState.timeoutId = setTimeout(startTraining, correct ? 500 : 1800);
         }
         function getPositionsForPlayers(n, heroPos) {
-            let base;
-            if (n <= 2) base = ['SB','BB'];
+            let base; if (n <= 2) base = ['SB','BB'];
             else if (n <= 6) base = ['SB','BB','UTG','MP','CO','BTN'].slice(0, n);
-            else {
-                const extra = n - 6;
-                base = ['SB','BB','UTG'];
-                for (let i = 1; i <= extra; i++) base.push('MP' + i);
-                base.push('CO','BTN');
-                base = base.slice(0, n);
-            }
-            const idx = base.indexOf(heroPos);
-            const startIdx = idx !== -1 ? idx : 0;
+            else { const extra = n - 6; base = ['SB','BB','UTG']; for (let i = 1; i <= extra; i++) base.push('MP' + i); base.push('CO','BTN'); base = base.slice(0, n); }
+            const idx = base.indexOf(heroPos); const startIdx = idx !== -1 ? idx : 0;
             return [...base.slice(startIdx), ...base.slice(0, startIdx)];
         }
         function updatePokerTable(scenario) {
-            const table = document.getElementById('poker-table');
-            table.querySelectorAll('.seat').forEach(s => s.remove());
+            const table = document.getElementById('poker-table'); table.querySelectorAll('.seat').forEach(s => s.remove());
             const players = scenario?.players || 6;
-            const positions = getPositionsForPlayers(players, scenario?.position || 'BTN');
-            const heroIdx = 0;
+            const positions = getPositionsForPlayers(players, scenario?.position || 'BTN'); const heroIdx = 0;
             positions.forEach((pos, i) => {
                 const seat = document.createElement('div'); seat.className = 'seat';
-                const angle = (i / players) * 2 * Math.PI + Math.PI/2;
-                const radius = 110;
+                const angle = (i / players) * 2 * Math.PI + Math.PI/2; const radius = 110;
                 seat.style.left = (140 + radius * Math.cos(angle) - 22) + 'px';
                 seat.style.top = (140 + radius * Math.sin(angle) - 22) + 'px';
                 seat.textContent = pos;
-                if (pos === 'BTN' || (players === 2 && pos === 'SB')) {
-                    const d = document.createElement('div'); d.style.width='16px'; d.style.height='16px'; d.style.background='white'; d.style.borderRadius='50%';
-                    d.style.position='absolute'; d.style.top='-8px'; d.style.right='-8px'; d.style.boxShadow='0 0 6px #fff';
-                    seat.appendChild(d);
-                }
+                if (pos === 'BTN' || (players === 2 && pos === 'SB')) { const d = document.createElement('div'); d.style.width='16px'; d.style.height='16px'; d.style.background='white'; d.style.borderRadius='50%'; d.style.position='absolute'; d.style.top='-8px'; d.style.right='-8px'; d.style.boxShadow='0 0 6px #fff'; seat.appendChild(d); }
                 if (scenario?.actionBefore !== 'none' && i === (heroIdx+1)%players) {
-                    const badge = document.createElement('div');
-                    badge.style.position = 'absolute'; badge.style.bottom = '-28px'; badge.style.left = '50%';
-                    badge.style.transform = 'translateX(-50%)'; badge.style.fontSize = '0.7rem'; badge.style.fontWeight = 'bold';
-                    badge.style.color = '#fbbf24'; badge.style.background = 'rgba(0,0,0,0.7)'; badge.style.padding = '2px 6px';
-                    badge.style.borderRadius = '4px'; badge.style.whiteSpace = 'nowrap';
+                    const badge = document.createElement('div'); badge.style.position = 'absolute'; badge.style.bottom = '-28px'; badge.style.left = '50%'; badge.style.transform = 'translateX(-50%)'; badge.style.fontSize = '0.7rem'; badge.style.fontWeight = 'bold'; badge.style.color = '#fbbf24'; badge.style.background = 'rgba(0,0,0,0.7)'; badge.style.padding = '2px 6px'; badge.style.borderRadius = '4px'; badge.style.whiteSpace = 'nowrap';
                     badge.textContent = scenario.actionBefore.toUpperCase() + (scenario.raiseSize ? ' ' + scenario.raiseSize+'bb' : '');
                     seat.appendChild(badge);
                 }
@@ -1162,44 +754,28 @@
         document.getElementById('btn-toggle-grid-train').onclick = () => {
             state.trainState.showGrid = !state.trainState.showGrid;
             document.getElementById('grid-wrapper').classList.toggle('invisible', !state.trainState.showGrid);
-            if (state.trainState.showGrid && state.trainState.currentRangeId) {
-                updateCellsForRange(state.trainState.currentRangeId, true);
-                if (state.trainState.currentHand) highlightCellInTrain(state.trainState.currentHand);
-            }
+            if (state.trainState.showGrid && state.trainState.currentRangeId) { updateCellsForRange(state.trainState.currentRangeId, true); if (state.trainState.currentHand) highlightCellInTrain(state.trainState.currentHand); }
         };
 
         function updateMemoryBrushButtons(range) {
-            const container = document.getElementById('memory-brush-buttons');
-            container.innerHTML = '';
+            const container = document.getElementById('memory-brush-buttons'); container.innerHTML = '';
             if (!range) return;
             getBrushIdsFromRange(range).forEach(id => {
-                const brush = getBrushById(id);
-                const btn = document.createElement('button');
-                btn.style.background = brush?.color || DEFAULT_FOLD_COLOR;
-                btn.textContent = brush?.name || id;
+                const brush = getBrushById(id); const btn = document.createElement('button');
+                btn.style.background = brush?.color || DEFAULT_FOLD_COLOR; btn.textContent = brush?.name || id;
                 if (state.memoryState.selectedMemBrushId === id) btn.style.border = '2px solid white';
                 btn.onclick = () => { state.memoryState.selectedMemBrushId = id; updateMemoryBrushButtons(range); };
                 container.appendChild(btn);
             });
             getMixedPatternsFromRange(range).forEach(mix => {
                 const btn = document.createElement('div'); btn.className = 'mixture-btn'; btn.style.width = '90px';
-                mix.entries.forEach(e => {
-                    const stripe = document.createElement('div'); stripe.className = 'mixture-stripe';
-                    stripe.style.width = e.pct+'%'; stripe.style.background = getBrushById(e.brushId)?.color || DEFAULT_FOLD_COLOR;
-                    btn.appendChild(stripe);
-                });
-                btn.onclick = () => applyMemoryBrushForMixture(mix.key);
-                container.appendChild(btn);
+                mix.entries.forEach(e => { const s = document.createElement('div'); s.className = 'mixture-stripe'; s.style.width = e.pct+'%'; s.style.background = getBrushById(e.brushId)?.color || DEFAULT_FOLD_COLOR; btn.appendChild(s); });
+                btn.onclick = () => applyMemoryBrushForMixture(mix.key); container.appendChild(btn);
             });
         }
         function applyMemoryBrushForMixture(patternKey) {
             const range = getActiveRange(); if (!range) return;
-            Object.entries(range.chart || {}).forEach(([hand, entries]) => {
-                if (normalizeChartEntry(entries).map(e => `${e.brushId}:${e.pct}`).join(',') === patternKey) {
-                    state.memoryState.userChart[hand] = normalizeChartEntry(entries)[0].brushId;
-                    renderMemoryCell(hand);
-                }
-            });
+            Object.entries(range.chart || {}).forEach(([hand, entries]) => { if (normalizeChartEntry(entries).map(e => `${e.brushId}:${e.pct}`).join(',') === patternKey) { state.memoryState.userChart[hand] = normalizeChartEntry(entries)[0].brushId; renderMemoryCell(hand); } });
         }
         function checkMemory() {
             const range = getActiveRange(); if (!range) return;
@@ -1208,28 +784,39 @@
                 const userBrush = state.memoryState.userChart[hand] || BUILTIN_FOLD_ID;
                 const dominant = getDominantBrushId(range.chart || {}, hand);
                 cell.classList.remove('memory-correct','memory-wrong');
-                if (userBrush === dominant) { correct++; cell.classList.add('memory-correct'); }
-                else { wrong++; cell.classList.add('memory-wrong'); }
+                if (userBrush === dominant) { correct++; cell.classList.add('memory-correct'); } else { wrong++; cell.classList.add('memory-wrong'); }
             });
             state.memoryCounts.correct += correct; state.memoryCounts.wrong += wrong;
-            state.statistics.memory.push({ hand:'all', correct, wrong, timestamp: Date.now(), rangeId: range.id, modelId: null });
-            saveData();
+            state.statistics.memory.push({ hand:'all', correct, wrong, timestamp: Date.now(), rangeId: range.id, modelId: null }); saveData();
         }
         document.getElementById('btn-check-memory').onclick = checkMemory;
-        document.getElementById('btn-toggle-grid-memory').onclick = () => {
-            state.memoryState.showGrid = !state.memoryState.showGrid;
-            document.getElementById('grid-wrapper').classList.toggle('invisible', !state.memoryState.showGrid);
-        };
+        document.getElementById('btn-toggle-grid-memory').onclick = () => { state.memoryState.showGrid = !state.memoryState.showGrid; document.getElementById('grid-wrapper').classList.toggle('invisible', !state.memoryState.showGrid); };
 
         function updateReportModelSelect() {
             const select = document.getElementById('report-model-select');
             select.innerHTML = '<option value="__all__">Все модели</option>';
-            getAllModelsFromTree(state.selectionTree).forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.id; opt.textContent = m.name;
-                select.appendChild(opt);
-            });
+            getAllModelsFromTree(state.selectionTree).forEach(m => { const opt = document.createElement('option'); opt.value = m.id; opt.textContent = m.name; select.appendChild(opt); });
             select.value = state.reportSelectedModelId || '__all__';
+        }
+        function getItemStats(item, stats, modelId) {
+            const ranges = item.type === 'folder' ? getAllRangesFromTree(item.children) : [item];
+            let relevant = stats.filter(s => ranges.some(r => r.id === s.rangeId));
+            if (modelId && modelId !== '__all__') relevant = relevant.filter(s => s.modelId === modelId);
+            const total = relevant.length; const correct = relevant.filter(s => s.correct).length;
+            const accuracy = total ? Math.round(correct / total * 100) : 0;
+            return { correct, total, accuracy };
+        }
+        function renderReportTreeItems(items, container, depth, stats, modelId) {
+            items.forEach(item => {
+                const div = document.createElement('div'); div.className = 'tree-item'; div.style.paddingLeft = (depth*14+6)+'px';
+                const icon = item.type === 'folder' ? (state.reportExpandedFolders.has(item.id) ? '📂' : '📁') : '📄';
+                const { correct, total, accuracy } = getItemStats(item, stats, modelId);
+                div.innerHTML = `<span>${icon}</span> ${item.name} <span style="margin-left:auto;">${accuracy}% (${correct}/${total})</span>`;
+                if (state.reportSelectedId === item.id) div.classList.add('active-tree');
+                div.onclick = () => { if (item.type === 'folder') { state.reportExpandedFolders.has(item.id) ? state.reportExpandedFolders.delete(item.id) : state.reportExpandedFolders.add(item.id); } state.reportSelectedId = item.id; renderReport(); };
+                container.appendChild(div);
+                if (item.type === 'folder' && state.reportExpandedFolders.has(item.id)) renderReportTreeItems(item.children, container, depth+1, stats, modelId);
+            });
         }
         function renderReport() {
             const mode = document.getElementById('report-mode-select').value;
@@ -1237,112 +824,59 @@
             const modelId = document.getElementById('report-model-select').value;
             state.reportSelectedModelId = modelId;
 
-            const treeContainer = document.getElementById('report-tree-container');
-            treeContainer.innerHTML = '';
+            const treeContainer = document.getElementById('report-tree-container'); treeContainer.innerHTML = '';
             const allItem = document.createElement('div'); allItem.className = 'tree-item';
-            allItem.innerHTML = '<span>🌐 Все диапазоны</span>';
+            const allStats = getItemStats({ type: 'folder', children: state.tree }, stats, modelId);
+            allItem.innerHTML = `<span>🌐 Все диапазоны</span> <span style="margin-left:auto;">${allStats.accuracy}% (${allStats.correct}/${allStats.total})</span>`;
             if (state.reportSelectedId === '__all__') allItem.classList.add('active-tree');
             allItem.onclick = () => { state.reportSelectedId = '__all__'; renderReport(); };
             treeContainer.appendChild(allItem);
             renderReportTreeItems(state.tree, treeContainer, 0, stats, modelId);
 
             const filtered = filterStatsBySelection(stats, modelId);
-            const total = filtered.length;
-            const correctCount = filtered.filter(r => r.correct).length;
+            const total = filtered.length; const correctCount = filtered.filter(r => r.correct).length;
             document.getElementById('report-accuracy').textContent = `Точность: ${correctCount}/${total} (${total ? Math.round(correctCount/total*100) : 0}%)`;
-            const details = document.getElementById('report-details');
-            details.innerHTML = '';
+            const details = document.getElementById('report-details'); details.innerHTML = '';
             if (state.reportSelectedId === '__all__') {
-                getAllRangesFromTree(state.tree).forEach(r => {
-                    const rangeStats = filtered.filter(s => s.rangeId === r.id);
-                    const c = rangeStats.filter(s => s.correct).length;
-                    const t = rangeStats.length;
-                    details.innerHTML += `<div>${r.name}: ${c}/${t} (${t ? Math.round(c/t*100) : 0}%)</div>`;
-                });
+                getAllRangesFromTree(state.tree).forEach(r => { const rs = filtered.filter(s => s.rangeId === r.id); const c = rs.filter(s => s.correct).length; const t = rs.length; details.innerHTML += `<div>${r.name}: ${c}/${t} (${t ? Math.round(c/t*100) : 0}%)</div>`; });
             }
             const errorMap = new Map();
-            filtered.forEach(s => {
-                const hand = s.hand || '?';
-                if (!errorMap.has(hand)) errorMap.set(hand, { total:0, errors:0 });
-                const entry = errorMap.get(hand); entry.total++;
-                if (!s.correct) entry.errors++;
-            });
+            filtered.forEach(s => { const hand = s.hand || '?'; if (!errorMap.has(hand)) errorMap.set(hand, { total:0, errors:0 }); const e = errorMap.get(hand); e.total++; if (!s.correct) e.errors++; });
             const sorted = Array.from(errorMap.entries()).sort((a,b) => (b[1].errors/b[1].total) - (a[1].errors/a[1].total));
             details.innerHTML += '<h4>Ошибки по рукам:</h4>';
-            sorted.forEach(([hand, e]) => {
-                details.innerHTML += `<div>${hand}: ${e.errors}/${e.total} (${Math.round(e.errors/e.total*100)}%)</div>`;
-            });
+            sorted.forEach(([hand, e]) => { details.innerHTML += `<div>${hand}: ${e.errors}/${e.total} (${Math.round(e.errors/e.total*100)}%)</div>`; });
+
+            const modelsContainer = document.getElementById('report-models-list'); modelsContainer.innerHTML = '';
+            const allModels = getAllModelsFromTree(state.selectionTree);
+            if (allModels.length > 0) {
+                const baseFiltered = filterStatsBySelection(stats, '__all__');
+                modelsContainer.innerHTML = '<h4>Модели:</h4>';
+                allModels.forEach(model => { const ms = baseFiltered.filter(s => s.modelId === model.id); const c = ms.filter(s => s.correct).length; const t = ms.length; const acc = t ? Math.round(c/t*100) : 0; modelsContainer.innerHTML += `<div>${model.name}: ${acc}% (${c}/${t})</div>`; });
+            } else { modelsContainer.innerHTML = '<p style="color:#888;">Нет моделей</p>'; }
 
             if (state.reportSelectedId !== '__all__') {
                 const range = findItemInTreeById(state.tree, state.reportSelectedId);
                 if (range) {
                     updateCellsForRange(range.id, false);
                     const handCounts = new Map();
-                    filtered.filter(s => s.rangeId === range.id).forEach(s => {
-                        if (!handCounts.has(s.hand)) handCounts.set(s.hand, 0);
-                        if (!s.correct) handCounts.set(s.hand, handCounts.get(s.hand) + 1);
-                    });
-                    cellElements.forEach((cell, hand) => {
-                        const cnt = handCounts.get(hand) || 0;
-                        if (cnt > 0) {
-                            const badge = document.createElement('div'); badge.className = 'badge error'; badge.textContent = cnt;
-                            cell.appendChild(badge);
-                        }
-                    });
+                    filtered.filter(s => s.rangeId === range.id).forEach(s => { if (!handCounts.has(s.hand)) handCounts.set(s.hand, 0); if (!s.correct) handCounts.set(s.hand, handCounts.get(s.hand) + 1); });
+                    cellElements.forEach((cell, hand) => { const cnt = handCounts.get(hand) || 0; if (cnt > 0) { const badge = document.createElement('div'); badge.className = 'badge error'; badge.textContent = cnt; cell.appendChild(badge); } });
                 }
             } else updateCellsForRange(null);
         }
-        function renderReportTreeItems(items, container, depth, stats, modelId) {
-            items.forEach(item => {
-                const div = document.createElement('div'); div.className = 'tree-item';
-                div.style.paddingLeft = (depth*14+6)+'px';
-                const icon = item.type === 'folder' ? (state.reportExpandedFolders.has(item.id) ? '📂' : '📁') : '📄';
-                div.innerHTML = `<span>${icon}</span> ${item.name} <span style="margin-left:auto;">${computeItemAccuracy(item, stats, modelId)}%</span>`;
-                if (state.reportSelectedId === item.id) div.classList.add('active-tree');
-                div.onclick = () => {
-                    if (item.type === 'folder') {
-                        state.reportExpandedFolders.has(item.id) ? state.reportExpandedFolders.delete(item.id) : state.reportExpandedFolders.add(item.id);
-                    }
-                    state.reportSelectedId = item.id; renderReport();
-                };
-                container.appendChild(div);
-                if (item.type === 'folder' && state.reportExpandedFolders.has(item.id)) renderReportTreeItems(item.children, container, depth+1, stats, modelId);
-            });
-        }
-        function computeItemAccuracy(item, stats, modelId) {
-            const ranges = item.type === 'folder' ? getAllRangesFromTree(item.children) : [item];
-            let relevant = stats.filter(s => ranges.some(r => r.id === s.rangeId));
-            if (modelId && modelId !== '__all__') relevant = relevant.filter(s => s.modelId === modelId);
-            return relevant.length ? Math.round(relevant.filter(s => s.correct).length / relevant.length * 100) : 0;
-        }
         function filterStatsBySelection(stats, modelId) {
             let filtered = stats;
-            if (state.reportSelectedId !== '__all__') {
-                const item = findItemInTreeById(state.tree, state.reportSelectedId);
-                if (!item) return [];
-                const ranges = item.type === 'folder' ? getAllRangesFromTree(item.children) : [item];
-                filtered = filtered.filter(s => ranges.some(r => r.id === s.rangeId));
-            }
+            if (state.reportSelectedId !== '__all__') { const item = findItemInTreeById(state.tree, state.reportSelectedId); if (!item) return []; const ranges = item.type === 'folder' ? getAllRangesFromTree(item.children) : [item]; filtered = filtered.filter(s => ranges.some(r => r.id === s.rangeId)); }
             if (modelId && modelId !== '__all__') filtered = filtered.filter(s => s.modelId === modelId);
             return filtered;
         }
         document.getElementById('report-mode-select').onchange = renderReport;
         document.getElementById('report-model-select').onchange = renderReport;
-        document.getElementById('btn-reset-stats').onclick = async () => {
-            if (await customConfirm('Сбросить всю статистику?')) {
-                state.statistics = { train:[], memory:[] };
-                state.trainCounts = { correct:0, wrong:0 };
-                state.memoryCounts = { correct:0, wrong:0 };
-                saveData(); renderReport();
-            }
-        };
+        document.getElementById('btn-reset-stats').onclick = async () => { if (await customConfirm('Сбросить статистику?')) { state.statistics = { train:[], memory:[] }; state.trainCounts = { correct:0, wrong:0 }; state.memoryCounts = { correct:0, wrong:0 }; saveData(); renderReport(); } };
 
         function startTimer(mode) { stopTimer(); state.timerMode = mode; state.timerStart = Date.now(); state.timerInterval = setInterval(updateTimerDisplay, 500); }
         function stopTimer() { if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; } }
-        function updateTimerDisplay() {
-            const elapsed = Math.floor((Date.now() - state.timerStart) / 1000);
-            document.getElementById('timer-display').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
-        }
+        function updateTimerDisplay() { const elapsed = Math.floor((Date.now() - state.timerStart) / 1000); document.getElementById('timer-display').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`; }
         document.getElementById('btn-reset-timer').onclick = () => { if (state.timerMode) startTimer(state.timerMode); };
 
         function customConfirm(msg) {
@@ -1369,7 +903,7 @@
             try {
                 const data = JSON.parse(text);
                 if (data.version !== 4) { alert('Неверная версия данных'); return; }
-                if (!await customConfirm('Импортировать данные? Текущие данные будут заменены.')) return;
+                if (!await customConfirm('Импортировать данные? Текущие будут заменены.')) return;
                 state.brushes = data.brushes; state.tree = data.tree; state.statistics = data.statistics;
                 if (data.selectionTree) state.selectionTree = data.selectionTree;
                 else if (data.selectionModels) state.selectionTree = data.selectionModels.map(m => ({ id:m.id, type:'model', name:m.name, marks:m.marks||{} }));
@@ -1389,14 +923,11 @@
                     if (resp.ok) {
                         const data = await resp.json();
                         if (data.version === 4) {
-                            state.brushes = data.brushes || state.brushes;
-                            state.tree = data.tree || [];
+                            state.brushes = data.brushes || state.brushes; state.tree = data.tree || [];
                             state.statistics = data.statistics || state.statistics;
                             state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
-                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 };
-                            state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
-                            ensureBuiltinFold(); saveData();
-                            return true;
+                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 }; state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
+                            ensureBuiltinFold(); saveData(); return true;
                         }
                     }
                 } catch (e) {}
@@ -1407,14 +938,11 @@
                     if (resp.ok) {
                         const data = await resp.json();
                         if (data.version === 4) {
-                            state.brushes = data.brushes || state.brushes;
-                            state.tree = data.tree || [];
+                            state.brushes = data.brushes || state.brushes; state.tree = data.tree || [];
                             state.statistics = data.statistics || state.statistics;
                             state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
-                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 };
-                            state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
-                            ensureBuiltinFold(); saveData();
-                            return true;
+                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 }; state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
+                            ensureBuiltinFold(); saveData(); return true;
                         }
                     }
                 } catch (e) {}
@@ -1426,33 +954,18 @@
 
         window.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-            if (e.key === 'F2' && state.mode === 'editor' && state.activeTreeElementId) {
-                const item = findItemInTreeById(state.tree, state.activeTreeElementId);
-                if (item) startRename(item);
-            }
-            if (e.key === 'T' && !e.ctrlKey && !e.metaKey) {
-                const modes = ['editor','selection','train','memory','report'];
-                setMode(modes[(modes.indexOf(state.mode) + 1) % modes.length]);
-            }
+            if (e.key === 'F2' && state.mode === 'editor' && state.activeTreeElementId) { const item = findItemInTreeById(state.tree, state.activeTreeElementId); if (item) startRename(item); }
+            if (e.key === 'T' && !e.ctrlKey && !e.metaKey) { const modes = ['editor','selection','train','memory','report']; setMode(modes[(modes.indexOf(state.mode) + 1) % modes.length]); }
             if (state.mode === 'train' && !state.trainState.answered) {
                 const kmap = { r:'РЕЙЗ', к:'КОЛЛ', c:'КОЛЛ', f:'ФОЛД', а:'ФОЛД', a:'АЛЛ-ИН', ф:'АЛЛ-ИН' };
                 const act = kmap[e.key.toLowerCase()];
-                if (act) {
-                    const range = findItemInTreeById(state.tree, state.trainState.currentRangeId);
-                    if (range) {
-                        const brush = state.brushes.find(b => b.type === act);
-                        if (brush) handleTrainingAnswer(brush.id);
-                    }
-                }
+                if (act) { const range = findItemInTreeById(state.tree, state.trainState.currentRangeId); if (range) { const brush = state.brushes.find(b => b.type === act); if (brush) handleTrainingAnswer(brush.id); } }
             }
         });
 
         async function init() {
-            if (!loadData()) {
-                state.brushes = []; state.tree = []; state.statistics = { train: [], memory: [] };
-            }
-            ensureBuiltinFold();
-            buildGrid();
+            if (!loadData()) { state.brushes = []; state.tree = []; state.statistics = { train: [], memory: [] }; }
+            ensureBuiltinFold(); buildGrid();
             const loaded = await autoLoadRanges();
             if (loaded) fullRender();
             setMode('editor');
