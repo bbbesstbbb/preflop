@@ -174,6 +174,7 @@
     <div class="flex-row" style="margin-top:auto;">
         <button id="btn-export">📥 Экспорт</button>
         <button id="btn-import">📤 Импорт</button>
+        <button id="btn-refresh-charts">🔄 Обновить чарты</button>
         <span id="timer-display">00:00</span>
         <button id="btn-reset-timer">🕒 Сброс</button>
     </div>
@@ -921,21 +922,34 @@
             } catch (e) { alert('Ошибка чтения файла'); }
         };
 
+        // Кнопка обновления чартов (без удаления статистики)
+        async function refreshChartsFromFile() {
+            try {
+                const resp = await fetch('default_ranges.json');
+                if (!resp.ok) { alert('Не удалось загрузить default_ranges.json'); return; }
+                const data = await resp.json();
+                if (data.version !== 4) { alert('Неверная версия данных'); return; }
+                state.brushes = data.brushes || state.brushes;
+                state.tree = data.tree || state.tree;
+                state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
+                ensureBuiltinFold();
+                saveData();
+                fullRender();
+                alert('Чарты и модели обновлены!');
+            } catch (e) { alert('Ошибка обновления'); }
+        }
+        document.getElementById('btn-refresh-charts').onclick = refreshChartsFromFile;
+
         async function autoLoadRanges() {
             const params = new URLSearchParams(window.location.search);
             const loadParam = params.get('load');
-
-            // Проверяем, есть ли уже данные в localStorage
             const alreadyHasData = (state.tree.length > 0 || state.brushes.length > 1);
 
-            // Функция, применяющая загруженные диапазоны, но сохраняющая старую статистику
             const applyRangesWithoutStats = (data) => {
                 state.brushes = data.brushes || state.brushes;
                 state.tree = data.tree || state.tree;
                 state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
-                // Если у ученика уже была своя статистика — не трогаем её
                 if (!alreadyHasData) {
-                    // Первый запуск — можно взять статистику из файла или оставить пустую
                     state.statistics = data.statistics || { train: [], memory: [] };
                     state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 };
                     state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
@@ -945,32 +959,24 @@
                 return true;
             };
 
-            // Принудительная загрузка через ?load=
             if (loadParam) {
                 try {
                     const resp = await fetch(loadParam);
                     if (resp.ok) {
                         const data = await resp.json();
-                        if (data.version === 4) {
-                            return applyRangesWithoutStats(data);
-                        }
+                        if (data.version === 4) return applyRangesWithoutStats(data);
                     }
                 } catch (e) {}
             }
-
-            // Автозагрузка default_ranges.json при первом запуске
             if (!alreadyHasData) {
                 try {
                     const resp = await fetch('default_ranges.json');
                     if (resp.ok) {
                         const data = await resp.json();
-                        if (data.version === 4) {
-                            return applyRangesWithoutStats(data);
-                        }
+                        if (data.version === 4) return applyRangesWithoutStats(data);
                     }
                 } catch (e) {}
             }
-
             return false;
         }
 
