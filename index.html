@@ -123,10 +123,14 @@
 <body>
 <div id="left-panel">
     <div id="mode-tabs" class="flex-row">
-        <button data-mode="editor">✏️</button><button data-mode="selection">🎯</button><button data-mode="train">🏋️</button><button data-mode="memory">🧠</button><button data-mode="report">📊</button>
+        <button data-mode="editor">✏️ Редактор</button>
+        <button data-mode="selection">🎯 Выборка</button>
+        <button data-mode="train">🏋️ Тренировка</button>
+        <button data-mode="memory">🧠 Память</button>
+        <button data-mode="report">📊 Отчёт</button>
     </div>
     <div id="section-editor-brushes">
-        <div class="flex-row"><span>Кисти:</span><button id="btn-add-brush">+</button></div>
+        <div class="flex-row"><span>Кисти:</span><button id="btn-add-brush">+ Кисть</button></div>
         <div id="brush-list" class="flex-row"></div>
         <div id="add-brush-form" style="display:none; gap:4px; flex-direction:column;">
             <select id="brush-type-select"><option>РЕЙЗ</option><option>КОЛЛ</option><option>ФОЛД</option><option>АЛЛ-ИН</option><option>ЧЕК</option></select>
@@ -136,12 +140,12 @@
         </div>
     </div>
     <div id="section-editor-tree">
-        <div class="flex-row"><button id="btn-add-folder">📁</button><button id="btn-add-range">📄</button></div>
+        <div class="flex-row"><button id="btn-add-folder">📁 Папка</button><button id="btn-add-range">📄 Диапазон</button></div>
         <div id="tree-container"></div>
     </div>
     <div id="section-selection" style="display:none;">
         <div id="selection-model-tree-container" style="margin-top:4px;"></div>
-        <div class="flex-row"><button id="btn-add-selection-folder">📁</button><button id="btn-add-selection-model">+Модель</button></div>
+        <div class="flex-row"><button id="btn-add-selection-folder">📁 Папка</button><button id="btn-add-selection-model">+ Модель</button></div>
         <div id="selection-range-tree-container" style="margin-top:8px;"></div>
     </div>
     <div id="section-train" style="display:none; flex-direction:column; gap:8px;">
@@ -150,12 +154,13 @@
         <div id="train-score" style="text-align:center; font-weight:bold;"></div>
         <div id="train-answer-buttons" class="flex-row"></div>
         <div id="train-feedback" style="text-align:center; font-weight:bold;"></div>
-        <button id="btn-toggle-grid-train">👁️</button>
+        <button id="btn-toggle-grid-train">👁️ Сетка</button>
     </div>
     <div id="section-memory" style="display:none; flex-direction:column; gap:8px;">
         <div id="memory-tree-container"></div>
         <div id="memory-brush-buttons" class="flex-row"></div>
-        <button id="btn-check-memory">✅</button><button id="btn-toggle-grid-memory">👁️</button>
+        <button id="btn-check-memory">✅ Проверить</button>
+        <button id="btn-toggle-grid-memory">👁️ Сетка</button>
     </div>
     <div id="section-report" style="display:none; flex-direction:column; gap:8px;">
         <select id="report-mode-select"><option value="train">Тренировка</option><option value="memory">Память</option></select>
@@ -164,11 +169,13 @@
         <div id="report-accuracy"></div>
         <div id="report-details"></div>
         <div id="report-models-list" style="margin-top:8px;"></div>
-        <button id="btn-reset-stats" class="danger">Сброс</button>
+        <button id="btn-reset-stats" class="danger">🗑️ Сброс статистики</button>
     </div>
     <div class="flex-row" style="margin-top:auto;">
-        <button id="btn-export">📥</button><button id="btn-import">📤</button>
-        <span id="timer-display">00:00</span><button id="btn-reset-timer">Сброс</button>
+        <button id="btn-export">📥 Экспорт</button>
+        <button id="btn-import">📤 Импорт</button>
+        <span id="timer-display">00:00</span>
+        <button id="btn-reset-timer">🕒 Сброс</button>
     </div>
     <input type="file" id="import-file-input" accept=".json" style="display:none;">
 </div>
@@ -917,36 +924,53 @@
         async function autoLoadRanges() {
             const params = new URLSearchParams(window.location.search);
             const loadParam = params.get('load');
+
+            // Проверяем, есть ли уже данные в localStorage
+            const alreadyHasData = (state.tree.length > 0 || state.brushes.length > 1);
+
+            // Функция, применяющая загруженные диапазоны, но сохраняющая старую статистику
+            const applyRangesWithoutStats = (data) => {
+                state.brushes = data.brushes || state.brushes;
+                state.tree = data.tree || state.tree;
+                state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
+                // Если у ученика уже была своя статистика — не трогаем её
+                if (!alreadyHasData) {
+                    // Первый запуск — можно взять статистику из файла или оставить пустую
+                    state.statistics = data.statistics || { train: [], memory: [] };
+                    state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 };
+                    state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
+                }
+                ensureBuiltinFold();
+                saveData();
+                return true;
+            };
+
+            // Принудительная загрузка через ?load=
             if (loadParam) {
                 try {
                     const resp = await fetch(loadParam);
                     if (resp.ok) {
                         const data = await resp.json();
                         if (data.version === 4) {
-                            state.brushes = data.brushes || state.brushes; state.tree = data.tree || [];
-                            state.statistics = data.statistics || state.statistics;
-                            state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
-                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 }; state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
-                            ensureBuiltinFold(); saveData(); return true;
+                            return applyRangesWithoutStats(data);
                         }
                     }
                 } catch (e) {}
             }
-            if (state.tree.length === 0 && state.brushes.length <= 1) {
+
+            // Автозагрузка default_ranges.json при первом запуске
+            if (!alreadyHasData) {
                 try {
                     const resp = await fetch('default_ranges.json');
                     if (resp.ok) {
                         const data = await resp.json();
                         if (data.version === 4) {
-                            state.brushes = data.brushes || state.brushes; state.tree = data.tree || [];
-                            state.statistics = data.statistics || state.statistics;
-                            state.selectionTree = data.selectionTree || (data.selectionModels ? data.selectionModels.map(m => ({ id: m.id, type: 'model', name: m.name, marks: m.marks || {} })) : []);
-                            state.trainCounts = data.trainCounts || { correct: 0, wrong: 0 }; state.memoryCounts = data.memoryCounts || { correct: 0, wrong: 0 };
-                            ensureBuiltinFold(); saveData(); return true;
+                            return applyRangesWithoutStats(data);
                         }
                     }
                 } catch (e) {}
             }
+
             return false;
         }
 
