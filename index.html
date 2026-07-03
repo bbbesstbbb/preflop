@@ -43,8 +43,18 @@
         .cell.memory-wrong { border-color: var(--danger); }
         @keyframes activeGlow { 0%,100%{ box-shadow: 0 0 6px var(--warning); } 50%{ box-shadow: 0 0 12px var(--warning); } }
         .cell-label {
-            font-size: 1.1rem; font-weight: 900; color: #fff; text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
-            pointer-events: none; z-index: 2; text-align: center; line-height: 1.2;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #000;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.4), -1px -1px 3px rgba(255,255,255,0.4);
+            pointer-events: none;
+            z-index: 2;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .cell-label.pair {
+            color: #fff;
+            text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
         }
         .stripe { position: absolute; left: 0; right: 0; z-index: 1; }
         .badge {
@@ -218,6 +228,11 @@
             if (row < col) return RANKS[row] + RANKS[col] + 's';
             return RANKS[col] + RANKS[row] + 'o';
         }
+        function getHandDisplayName(hand, row, col) {
+            if (row === col) return RANKS[row];
+            if (row < col) return RANKS[row] + RANKS[col];
+            return RANKS[col] + RANKS[row];
+        }
         function getAllHands() { const hands = []; for (let r=0; r<13; r++) for (let c=0; c<13; c++) hands.push(getHandName(r,c)); return hands; }
 
         function saveData() {
@@ -286,8 +301,18 @@
             return norm.reduce((a,b) => a.pct > b.pct ? a : b).brushId;
         }
         function getBrushIdsFromRange(range) {
-            const set = new Set(); if (range.chart) Object.values(range.chart).forEach(arr => arr.forEach(e => set.add(e.brushId)));
-            if (set.size === 0) set.add(BUILTIN_FOLD_ID); return set;
+            // Возвращает Set в порядке следования кистей в state.brushes
+            const set = new Set();
+            if (range.chart) {
+                // Собираем все brushId, используемые в чарте
+                const used = new Set();
+                Object.values(range.chart).forEach(arr => arr.forEach(e => used.add(e.brushId)));
+                // Добавляем в порядке state.brushes
+                state.brushes.forEach(b => { if (used.has(b.id)) set.add(b.id); });
+            }
+            // Если нет ни одной кисти, добавляем фолд
+            if (set.size === 0) set.add(BUILTIN_FOLD_ID);
+            return set;
         }
         function getMixedPatternsFromRange(range) {
             const map = new Map(); if (!range.chart) return [];
@@ -304,12 +329,18 @@
             for (let r=0; r<13; r++) {
                 const rowDiv = document.createElement('div'); rowDiv.className = 'grid-row-cells';
                 for (let c=0; c<13; c++) {
-                    const hand = getHandName(r,c); const cell = document.createElement('div'); cell.className = 'cell';
+                    const hand = getHandName(r,c);
+                    const cell = document.createElement('div'); cell.className = 'cell';
                     cell.dataset.hand = hand; cell.dataset.row = r; cell.dataset.col = c;
-                    const label = document.createElement('div'); label.className = 'cell-label'; label.textContent = hand;
+                    const label = document.createElement('div');
+                    label.className = 'cell-label';
+                    label.textContent = getHandDisplayName(hand, r, c);
+                    if (r === c) label.classList.add('pair');
                     cell.appendChild(label);
-                    cell.addEventListener('mousedown', onCellMouseDown); cell.addEventListener('mouseenter', onCellMouseEnter);
-                    rowDiv.appendChild(cell); cellElements.set(hand, cell);
+                    cell.addEventListener('mousedown', onCellMouseDown);
+                    cell.addEventListener('mouseenter', onCellMouseEnter);
+                    rowDiv.appendChild(cell);
+                    cellElements.set(hand, cell);
                 }
                 grid.appendChild(rowDiv);
             }
@@ -317,7 +348,15 @@
         function updateCellDisplay(cell, hand, chart, train, hideTrainMarks) {
             cell.querySelectorAll('.stripe,.badge').forEach(el => el.remove());
             let label = cell.querySelector('.cell-label');
-            if (!label) { label = document.createElement('div'); label.className = 'cell-label'; label.textContent = hand; cell.appendChild(label); }
+            if (!label) {
+                label = document.createElement('div');
+                label.className = 'cell-label';
+                const row = +cell.dataset.row;
+                const col = +cell.dataset.col;
+                label.textContent = getHandDisplayName(hand, row, col);
+                if (row === col) label.classList.add('pair');
+                cell.appendChild(label);
+            }
             if (!hideTrainMarks) cell.classList.toggle('train-marked', train && train[hand] === true);
             const norm = chart?.[hand] ? normalizeChartEntry(chart[hand]) : [];
             if (norm.length === 0) {
@@ -385,46 +424,143 @@
         function clearAllCellHighlights() { document.querySelectorAll('.cell').forEach(c => c.classList.remove('active-train-hand','memory-correct','memory-wrong')); }
         function highlightCellInTrain(hand) { clearAllCellHighlights(); const cell = cellElements.get(hand); if (cell) cell.classList.add('active-train-hand'); }
 
+        // ---------- РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ КИСТЕЙ ----------
         function renderBrushes() {
-            const container = document.getElementById('brush-list'); container.innerHTML = '';
+            const container = document.getElementById('brush-list');
+            container.innerHTML = '';
             state.brushes.forEach((brush, idx) => {
-                const chip = document.createElement('span'); chip.className = 'brush-chip'; chip.draggable = true;
-                chip.dataset.brushIdx = idx; chip.dataset.brushId = brush.id;
+                const chip = document.createElement('span'); chip.className = 'brush-chip';
+                chip.draggable = true;
+                chip.dataset.brushIdx = idx;
+                chip.dataset.brushId = brush.id;
                 if (state.selectedBrushes.has(brush.id)) chip.classList.add('selected');
                 chip.innerHTML = `<span class="swatch" style="background:${brush.color};"></span>${brush.name}`;
-                if (!brush.builtin) { const del = document.createElement('span'); del.className = 'del-brush'; del.textContent = '×'; del.onclick = (e) => { e.stopPropagation(); deleteBrush(brush.id); }; chip.appendChild(del); }
-                chip.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', brush.id); chip.classList.add('dragging'); });
+                // Кнопка редактирования (не показываем для встроенной кисти)
+                if (!brush.builtin) {
+                    const editBtn = document.createElement('span');
+                    editBtn.className = 'edit-brush';
+                    editBtn.innerHTML = '✎';
+                    editBtn.style.marginLeft = '6px';
+                    editBtn.style.cursor = 'pointer';
+                    editBtn.style.fontSize = '1rem';
+                    editBtn.onclick = (e) => { e.stopPropagation(); showEditBrushForm(brush); };
+                    chip.appendChild(editBtn);
+                    const del = document.createElement('span');
+                    del.className = 'del-brush';
+                    del.textContent = '×';
+                    del.onclick = (e) => { e.stopPropagation(); confirmAndDeleteBrush(brush.id); };
+                    chip.appendChild(del);
+                }
+                chip.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', brush.id);
+                    chip.classList.add('dragging');
+                });
                 chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
                 chip.addEventListener('dragover', (e) => e.preventDefault());
                 chip.addEventListener('drop', (e) => {
-                    e.preventDefault(); const draggedId = e.dataTransfer.getData('text/plain');
+                    e.preventDefault();
+                    const draggedId = e.dataTransfer.getData('text/plain');
                     if (draggedId === brush.id) return;
                     const draggedIdx = state.brushes.findIndex(b => b.id === draggedId);
-                    if (draggedIdx !== -1) { const [moved] = state.brushes.splice(draggedIdx, 1); state.brushes.splice(idx, 0, moved); saveData(); renderBrushes(); }
+                    if (draggedIdx !== -1) {
+                        const [moved] = state.brushes.splice(draggedIdx, 1);
+                        state.brushes.splice(idx, 0, moved);
+                        saveData(); renderBrushes();
+                    }
                 });
                 chip.onclick = (e) => {
-                    if (e.ctrlKey || e.metaKey) { state.selectedBrushes.has(brush.id) ? state.selectedBrushes.delete(brush.id) : state.selectedBrushes.add(brush.id); }
-                    else { state.selectedBrushes.clear(); state.selectedBrushes.add(brush.id); }
+                    if (e.ctrlKey || e.metaKey) {
+                        state.selectedBrushes.has(brush.id) ? state.selectedBrushes.delete(brush.id) : state.selectedBrushes.add(brush.id);
+                    } else {
+                        state.selectedBrushes.clear(); state.selectedBrushes.add(brush.id);
+                    }
                     if (state.selectedBrushes.size === 0) state.selectedBrushes.add(BUILTIN_FOLD_ID);
                     renderBrushes();
                 };
                 container.appendChild(chip);
             });
         }
+
+        function showEditBrushForm(brush) {
+            // Используем ту же форму добавления, но меняем заголовок и предзаполняем поля
+            const form = document.getElementById('add-brush-form');
+            form.style.display = 'flex';
+            document.getElementById('brush-type-select').value = brush.type;
+            document.getElementById('brush-name-input').value = brush.name;
+            document.getElementById('brush-color-input').value = brush.color;
+            // Подсветим активный цвет в палитре
+            document.querySelectorAll('#color-palette span').forEach(d => {
+                d.classList.remove('active-dot');
+                if (d.style.background === brush.color) d.classList.add('active-dot');
+            });
+            // Меняем обработчик сохранения
+            const saveBtn = document.getElementById('save-brush');
+            const originalSaveHandler = saveBtn.onclick;
+            saveBtn.onclick = () => {
+                const type = document.getElementById('brush-type-select').value;
+                let name = document.getElementById('brush-name-input').value.trim() || type;
+                const color = document.getElementById('brush-color-input').value;
+                brush.type = type;
+                brush.name = name;
+                brush.color = color;
+                saveData();
+                renderBrushes();
+                updateCellsForRange(state.activeRangeId, true);
+                form.style.display = 'none';
+                saveBtn.onclick = originalSaveHandler; // восстанавливаем
+            };
+            // Кнопка отмены вернёт всё обратно
+            const cancelBtn = document.getElementById('cancel-brush');
+            const originalCancelHandler = cancelBtn.onclick;
+            cancelBtn.onclick = () => {
+                form.style.display = 'none';
+                saveBtn.onclick = originalSaveHandler;
+                cancelBtn.onclick = originalCancelHandler;
+            };
+        }
+
+        async function confirmAndDeleteBrush(id) {
+            if (!await customConfirm('Удалить кисть?')) return;
+            deleteBrush(id);
+        }
+
         function deleteBrush(id) {
             if (id === BUILTIN_FOLD_ID) return;
-            state.brushes = state.brushes.filter(b => b.id !== id); state.selectedBrushes.delete(id);
+            state.brushes = state.brushes.filter(b => b.id !== id);
+            state.selectedBrushes.delete(id);
             if (state.selectedBrushes.size === 0) state.selectedBrushes.add(BUILTIN_FOLD_ID);
             getAllRangesFromTree(state.tree).forEach(range => {
                 if (!range.chart) return;
                 for (const [hand, entries] of Object.entries(range.chart)) {
                     const filtered = entries.filter(e => e.brushId !== id);
-                    if (filtered.length === 0) delete range.chart[hand]; else range.chart[hand] = filtered;
+                    if (filtered.length === 0) delete range.chart[hand];
+                    else range.chart[hand] = filtered;
                 }
             });
             saveData(); renderBrushes(); updateCellsForRange(state.activeRangeId, true);
         }
-        function showAddBrushForm() { document.getElementById('add-brush-form').style.display = 'flex'; document.getElementById('brush-name-input').value = document.getElementById('brush-type-select').value; }
+
+        function showAddBrushForm() { 
+            const form = document.getElementById('add-brush-form');
+            form.style.display = 'flex';
+            document.getElementById('brush-name-input').value = document.getElementById('brush-type-select').value;
+            // Возвращаем стандартные обработчики
+            const saveBtn = document.getElementById('save-brush');
+            saveBtn.onclick = saveNewBrushHandler;
+            document.getElementById('cancel-brush').onclick = () => form.style.display = 'none';
+        }
+
+        const saveNewBrushHandler = () => {
+            const type = document.getElementById('brush-type-select').value;
+            let name = document.getElementById('brush-name-input').value.trim() || type;
+            const color = document.getElementById('brush-color-input').value;
+            const newBrush = { id: genId(), type, name, color, builtin: false };
+            state.brushes.push(newBrush);
+            state.selectedBrushes.clear(); state.selectedBrushes.add(newBrush.id);
+            saveData(); renderBrushes();
+            document.getElementById('add-brush-form').style.display = 'none';
+        };
+
         document.getElementById('btn-add-brush').onclick = showAddBrushForm;
         document.getElementById('cancel-brush').onclick = () => document.getElementById('add-brush-form').style.display = 'none';
         document.getElementById('brush-type-select').onchange = function() { document.getElementById('brush-name-input').value = this.value; };
@@ -436,14 +572,6 @@
                 palette.appendChild(dot);
             });
         })();
-        document.getElementById('save-brush').onclick = () => {
-            const type = document.getElementById('brush-type-select').value;
-            let name = document.getElementById('brush-name-input').value.trim() || type;
-            const color = document.getElementById('brush-color-input').value;
-            const newBrush = { id: genId(), type, name, color, builtin: false };
-            state.brushes.push(newBrush); state.selectedBrushes.clear(); state.selectedBrushes.add(newBrush.id);
-            saveData(); renderBrushes(); document.getElementById('add-brush-form').style.display = 'none';
-        };
 
         function renderTree() { const container = document.getElementById('tree-container'); container.innerHTML = ''; renderTreeItems(state.tree, container, 0, true); }
         function renderMemoryTree() { const container = document.getElementById('memory-tree-container'); container.innerHTML = ''; renderTreeItems(state.tree, container, 0, false); }
@@ -698,19 +826,30 @@
             updateTrainScore();
         }
         function renderTrainAnswerButtons(rangeId) {
-            const container = document.getElementById('train-answer-buttons'); container.innerHTML = '';
-            const range = findItemInTreeById(state.tree, rangeId); if (!range) return;
-            getBrushIdsFromRange(range).forEach(id => {
-                const brush = getBrushById(id); const btn = document.createElement('button');
-                btn.style.background = brush?.color || DEFAULT_FOLD_COLOR; btn.textContent = brush?.name || id;
-                btn.onclick = () => handleTrainingAnswer(id); container.appendChild(btn);
+            const container = document.getElementById('train-answer-buttons');
+            container.innerHTML = '';
+            const range = findItemInTreeById(state.tree, rangeId);
+            if (!range) return;
+            // Получаем ID кистей, используемых в диапазоне
+            const usedIds = getBrushIdsFromRange(range);
+            // Сортируем в порядке state.brushes
+            const sortedBrushes = state.brushes.filter(b => usedIds.has(b.id));
+            sortedBrushes.forEach(brush => {
+                const btn = document.createElement('button');
+                btn.style.background = brush.color;
+                btn.textContent = brush.name;
+                btn.onclick = () => handleTrainingAnswer(brush.id);
+                container.appendChild(btn);
             });
-            getMixedPatternsFromRange(range).forEach((mix, idx) => {
+            // Смешанные кнопки (если есть) добавляем после
+            const mixtures = getMixedPatternsFromRange(range);
+            mixtures.forEach((mix, idx) => {
                 const btn = document.createElement('div'); btn.className = 'mixture-btn'; btn.style.width = '100px';
                 mix.entries.forEach(e => { const s = document.createElement('div'); s.className = 'mixture-stripe'; s.style.width = e.pct+'%'; s.style.background = getBrushById(e.brushId)?.color || DEFAULT_FOLD_COLOR; btn.appendChild(s); });
                 const label = document.createElement('div'); label.className = 'mixture-label'; label.textContent = mix.entries.map(e => getBrushById(e.brushId)?.name).join('/');
                 btn.appendChild(label); btn.dataset.patternKey = mix.key;
-                btn.onclick = () => handleTrainingAnswer('mixture_'+idx, mix.key); container.appendChild(btn);
+                btn.onclick = () => handleTrainingAnswer('mixture_'+idx, mix.key);
+                container.appendChild(btn);
             });
         }
         function handleTrainingAnswer(answerBrushId, patternKey = null) {
@@ -768,11 +907,13 @@
         function updateMemoryBrushButtons(range) {
             const container = document.getElementById('memory-brush-buttons'); container.innerHTML = '';
             if (!range) return;
-            getBrushIdsFromRange(range).forEach(id => {
-                const brush = getBrushById(id); const btn = document.createElement('button');
-                btn.style.background = brush?.color || DEFAULT_FOLD_COLOR; btn.textContent = brush?.name || id;
-                if (state.memoryState.selectedMemBrushId === id) btn.style.border = '2px solid white';
-                btn.onclick = () => { state.memoryState.selectedMemBrushId = id; updateMemoryBrushButtons(range); };
+            const usedIds = getBrushIdsFromRange(range);
+            const sortedBrushes = state.brushes.filter(b => usedIds.has(b.id));
+            sortedBrushes.forEach(brush => {
+                const btn = document.createElement('button');
+                btn.style.background = brush.color; btn.textContent = brush.name;
+                if (state.memoryState.selectedMemBrushId === brush.id) btn.style.border = '2px solid white';
+                btn.onclick = () => { state.memoryState.selectedMemBrushId = brush.id; updateMemoryBrushButtons(range); };
                 container.appendChild(btn);
             });
             getMixedPatternsFromRange(range).forEach(mix => {
@@ -922,7 +1063,6 @@
             } catch (e) { alert('Ошибка чтения файла'); }
         };
 
-        // Кнопка обновления чартов (без удаления статистики)
         async function refreshChartsFromFile() {
             try {
                 const resp = await fetch('default_ranges.json');
